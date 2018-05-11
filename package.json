@@ -1,0 +1,23 @@
+{
+  "name": "hurricane-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "assert": "^1.4.1",
+    "chalk": "^2.4.0",
+    "mocha": "^5.1.1",
+    "request": "^2.85.0",
+    "request-promise": "^4.2.2",
+    "standard": "^11.0.1"
+  },
+  "dependencies": {}
+}
