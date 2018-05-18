@@ -31,6 +31,9 @@ const strings = artifacts.require('./../vendors/strings.sol')
 module.exports = (deployer, network, accounts) => {
   let controller
 
+  console.log('*****', accounts, '*****')
+  console.log('***** FUNDER:', accounts[2], '*****')
+
   const fund = value => web3.toWei(value, 'ether')
 
   log.info('Deploy HurricaneResponseController contract')
@@ -78,25 +81,24 @@ module.exports = (deployer, network, accounts) => {
     .then(() => controller.setAllContracts({from: accounts[1]}))
 
     // Fund Contracts
-    .then(() => {
-      return HurricaneResponseController.deployed()
 
-        // Fund HR.Ledger
-        .then(() => log.info('Fund HR.Ledger'))
-        .then(() => HurricaneResponseLedger.deployed())
-        .then(HR_LG => HR_LG.fund({from: accounts[2], value: fund(50)}))
-        .catch(e => { console.log(e) })
-
-        // Fund HR.Underwrite
-        .then(() => log.info('Fund HR.Underwrite'))
-        .then(() => HurricaneResponseUnderwrite.deployed())
-        .then(HR_UW => HR_UW.fund({from: accounts[2], value: fund(10)}))
-
-        // Fund HR.Payout
-        .then(() => log.info('Fund HR.Payout'))
-        .then(() => HurricaneResponsePayout.deployed())
-        .then(HR_PY => HR_PY.fund({from: accounts[2], value: fund(10)}))
+    // Fund HR.Ledger
+    .then(() => log.info('Fund HR.Ledger'))
+    .then(() => HurricaneResponseLedger.deployed())
+    .then(HR_LG => {
+      log.info(`Funder: ${accounts[2]}`)
+      return HR_LG.fund({from: accounts[2], value: fund(1), gas: 5e5})
     })
+
+    // Fund HR.Underwrite
+    .then(() => log.info('Fund HR.Underwrite'))
+    .then(() => HurricaneResponseUnderwrite.deployed())
+    .then(HR_UW => HR_UW.fund({from: accounts[2], value: fund(0.5), gas: 5e5}))
+
+    // Fund HR.Payout
+    .then(() => log.info('Fund HR.Payout'))
+    .then(() => HurricaneResponsePayout.deployed())
+    .then(HR_PY => HR_PY.fund({from: accounts[2], value: fund(0.5), gas: 5e5}))
 
     .then(() => log.info('Deploy AddressResolver'))
 
