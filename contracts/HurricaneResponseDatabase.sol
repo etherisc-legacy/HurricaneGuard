@@ -209,7 +209,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
   function createUpdateRisk(bytes32 _market, bytes32 _season) returns (bytes32 _riskId) {
     require(HR_AC.checkPermission(101, msg.sender));
 
-    _riskId = sha3(
+    _riskId = keccak256(
       _market,
       _season
     );
