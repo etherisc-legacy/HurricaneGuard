@@ -40,7 +40,7 @@ contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, Hur
     /* For testnet and mainnet */
     oraclize_setProof(proofType_TLSNotary);
     /* For development */
-    /* OAR = OraclizeAddrResolverI(0xE5FA77b3caB42cb10F5200d95b2cDB576d829c7B); */
+    /* OAR = OraclizeAddrResolverI(0x80e9c30A9dae62BCCf777E741bF2E312d828b65f); */
   }
 
   function setContracts() onlyController {

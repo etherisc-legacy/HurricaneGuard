@@ -1,10 +1,9 @@
+const dotenv = require('dotenv')
 const HDWalletProvider = require('truffle-hdwallet-provider')
+const { MNEMONIC, INFURA_KEY } = dotenv.load().parsed
 
-// Pub address: 0x756d8bae674eb9e08f7d3644ee32a56aab828d59
-const mnemonic =
-  'payment local math advance attract region unveil energy barely kitten model armor'
-const INFURA_KEY = 'npPr7wL0YRxP3ewG82AL'
-const rinkebyProvider = new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/' + INFURA_KEY, 0, 10)
+const rinkebyProvider =
+  new HDWalletProvider(MNEMONIC, 'https://rinkeby.infura.io/' + INFURA_KEY, 0, 10)
 
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>

@@ -9,16 +9,18 @@
   "scripts": {
     "test": "truffle test"
   },
-  "author": "",
+  "author": "Joel Martínez @j0x0j",
   "license": "ISC",
   "devDependencies": {
     "assert": "^1.4.1",
     "chalk": "^2.4.0",
+    "dotenv": "^5.0.1",
     "mocha": "^5.1.1",
     "request": "^2.85.0",
     "request-promise": "^4.2.2",
     "standard": "^11.0.1",
-    "truffle-hdwallet-provider": "github:trufflesuite/truffle-hdwallet-provider"
+    "truffle-hdwallet-provider": "github:trufflesuite/truffle-hdwallet-provider",
+    "winston": "^2.4.2"
   },
   "dependencies": {}
 }

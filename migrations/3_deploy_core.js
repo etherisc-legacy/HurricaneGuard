@@ -31,9 +31,6 @@ const strings = artifacts.require('./../vendors/strings.sol')
 module.exports = (deployer, network, accounts) => {
   let controller
 
-  console.log('*****', accounts, '*****')
-  console.log('***** FUNDER:', accounts[2], '*****')
-
   const fund = value => web3.toWei(value, 'ether')
 
   log.info('Deploy HurricaneResponseController contract')
@@ -115,7 +112,7 @@ module.exports = (deployer, network, accounts) => {
       log.info(`HR.Owner: ${accounts[1]}`)
       log.info(`HR.Funder: ${accounts[2]}`)
       log.info(`HR.CustomersAdmin: ${accounts[3]}`)
-      log.info(`HR.Emeregency: ${accounts[4]}`)
+      log.info(`HR.Emergency: ${accounts[4]}`)
       log.info(`HR.Controller: ${HurricaneResponseController.address}`)
       log.info(`HR.AccessController: ${HurricaneResponseAccessController.address}`)
       log.info(`HR.Database: ${HurricaneResponseDatabase.address}`)
