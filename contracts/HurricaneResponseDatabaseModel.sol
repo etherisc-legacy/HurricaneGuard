@@ -38,9 +38,10 @@ contract HurricaneResponseDatabaseModel {
   // 02 = Revoked:	  The customer has revoked the policy.
   //					        The premium minus cancellation fee is payed back to the
   //					        customer by the oracle.
-  // 03 = PaidOut:	  The flight has ended with delay.
+  // 03 = PaidOut:	  An atmospheric event of specified intensity happened
+  //                  at a specifc distance from the submitted location.
   //					        The oracle has checked and payed out.
-  // 04 = Expired:	  The flight has endet with <15min. delay.
+  // 04 = Expired:	  The season covered has ended.
   //					        No payout.
   // 05 = Declined:	  The application was invalid.
   //					        The premium minus cancellation fee is payed back to the
@@ -94,19 +95,22 @@ contract HurricaneResponseDatabaseModel {
     Currency currency;
     // 10 - External customer id
     bytes32 customerExternalId;
+    // 11 - Policy lat, lng
+    bytes32 latlng;
   }
 
   // the risk structure; this structure keeps track of the risk-
   // specific parameters.
-  // several policies can share the same risk structure (typically
-  // some people flying with the same plane)
+  // several policies can share the same risk structure
+  // (typically same people in a specific geographic
+  // area [market] for a particular season)
   struct Risk {
     // 0 - Market, "PR" for pilot
     bytes32 market;
     // 1 - Season, the current year
     bytes32 season;
-    // 2 - the wind speed that triggered payouts
-    uint8 windSpeed;
+    // 2 - the event category that triggered payouts
+    bytes32 category;
     // 3 - we limit the cumulated weighted premium to avoid cluster risks
     uint cumulatedWeightedPremium;
     // 4 - max cumulated Payout for this risk

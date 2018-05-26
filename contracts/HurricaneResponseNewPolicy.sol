@@ -109,16 +109,12 @@ contract HurricaneResponseNewPolicy is HurricaneResponseControlledContract, Hurr
     HR_LG.receiveFunds.value(msg.value)(Acc.Premium);
 
     // develop conditions to decline policies
-    // 1- _market is not PR, for pilot only
-    //  - ideally we have a registry of markets
+    // 1- ideally we have a registry of markets
     //  - and a safe way to create them
     // 2- _season is not current year
-    // 3- the amount of policies for the pilot are filled
+    // 3- TODO: the amount of policies for the pilot are filled
 
-    if (
-      _market != "PR" ||
-      _season != strings.uintToBytes(getYear(block.timestamp))
-    ) {
+    if (_season != strings.uintToBytes(getYear(block.timestamp))) {
       LogPolicyDeclined(0, "Invalid market/season");
       HR_LG.sendFunds(msg.sender, Acc.Premium, msg.value);
       return;
@@ -127,7 +123,7 @@ contract HurricaneResponseNewPolicy is HurricaneResponseControlledContract, Hurr
     bytes32 riskId = HR_DB.createUpdateRisk(_market, _season);
 
     uint premium = bookAndCalcRemainingPremium();
-    uint policyId = HR_DB.createPolicy(msg.sender, premium, _currency, _customerExternalId, riskId);
+    uint policyId = HR_DB.createPolicy(msg.sender, premium, _currency, _customerExternalId, riskId, _latlng);
 
     // now we have successfully applied
     HR_DB.setState(

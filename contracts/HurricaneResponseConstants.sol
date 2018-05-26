@@ -118,15 +118,17 @@ contract HurricaneResponseConstants {
   // reserve for tail risks
   uint8 constant RESERVE_PERCENT = 1;
 
-  // Hardcoded URL, should be mocked or used as a placeholder
-  /* string constant ORACLIZE_RATINGS_BASE_URL =
-    "xml(https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=tafs&requestType=retrieve&format=xml&stationString=";
-  string constant ORACLIZE_RATINGS_QUERY =
-    "&hoursBeforeNow=4).xpath(//TAF[1]/forecast[1]/wind_speed_kt/text())"; */
+  // This api is a placeholder until we can integrate
+  // an accurate risk pricing service
   string constant ORACLIZE_RATINGS_BASE_URL =
     "json(https://api.weather.gov/stations/";
   string constant ORACLIZE_RATINGS_QUERY =
     "/observations?limit=1).features[0].properties.windSpeed.value";
+
+  string constant ORACLIZE_STATUS_BASE_URL =
+    "json(https://ec2-35-173-178-191.compute-1.amazonaws.com/api/oracle/payout/?";
+  string constant ORACLIZE_STATUS_QUERY =
+    ").result";
 
   // gas Constants for oraclize
   uint constant ORACLIZE_GAS = 1000000;

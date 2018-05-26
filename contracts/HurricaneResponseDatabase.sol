@@ -111,11 +111,12 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
     _premium = p.premium;
   }
 
-  function getPolicyData(uint _policyId) returns (address _customer, uint _weight, uint _premium) {
+  function getPolicyData(uint _policyId) returns (address _customer, uint _weight, uint _premium, bytes32 _latlng) {
     Policy storage p = policies[_policyId];
     _customer = p.customer;
     _weight = p.weight;
     _premium = p.premium;
+    _latlng = p.latlng;
   }
 
   function getPolicyState(uint _policyId) returns (policyState _state) {
@@ -128,7 +129,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
     _riskId = p.riskId;
   }
 
-  function createPolicy(address _customer, uint _premium, Currency _currency, bytes32 _customerExternalId, bytes32 _riskId) returns (uint _policyId) {
+  function createPolicy(address _customer, uint _premium, Currency _currency, bytes32 _customerExternalId, bytes32 _riskId, bytes32 _latlng) returns (uint _policyId) {
     require(HR_AC.checkPermission(101, msg.sender));
 
     _policyId = policies.length++;
@@ -143,6 +144,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
     p.customerExternalId = _customerExternalId;
     p.premium = _premium;
     p.riskId = _riskId;
+    p.latlng = _latlng;
   }
 
   function setState(
@@ -185,12 +187,12 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
     p.actualPayout = _actualPayout;
   }
 
-  function setWindSpeed(uint _policyId, uint8 _windSpeed) {
+  function setHurricaneCategory(uint _policyId, bytes32 _category) {
     require(HR_AC.checkPermission(101, msg.sender));
 
     Risk storage r = risks[policies[_policyId].riskId];
 
-    r.windSpeed = _windSpeed;
+    r.category = _category;
   }
 
   // Getter and Setter for risks

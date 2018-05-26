@@ -74,19 +74,26 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
    * @param _riskId
    * @param _oraclizeTime
    */
-  function schedulePayoutOraclizeCall(uint _policyId, bytes32 _riskId) public {
+  function schedulePayoutOraclizeCall(uint _policyId, bytes32 _riskId, uint _oraclizeTime) public {
+    // TODO: decide wether a policy holder could trigger their own payout function
     require(HR_AC.checkPermission(101, msg.sender));
 
-    var (market, season) = HR_DB.getRiskParameters(_riskId);
+    var (, season) = HR_DB.getRiskParameters(_riskId);
+    // Require payout to be in current season
+    // TODO: should set policy as expired
+    require(season == strings.uintToBytes(getYear(block.timestamp)));
+
+    var (, , , latlng) = HR_DB.getPolicyData(_policyId);
 
     string memory oraclizeUrl = strConcat(
-      /* ORACLIZE_STATUS_BASE_URL, */
-      b32toString(market),
-      b32toString(season)
-      /* ORACLIZE_STATUS_QUERY */
+      ORACLIZE_STATUS_BASE_URL,
+      "latlng=",
+      b32toString(latlng),
+      "&start=2018-05-01", // for testing
+      ORACLIZE_STATUS_QUERY
     );
 
-    bytes32 queryId = oraclize_query("URL", oraclizeUrl, ORACLIZE_GAS);
+    bytes32 queryId = oraclize_query(_oraclizeTime, "URL", oraclizeUrl, ORACLIZE_GAS);
 
     HR_DB.createOraclizeCallback(
       queryId,
@@ -113,19 +120,23 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
 
     bytes32 riskId = HR_DB.getRiskId(policyId);
 
-    /* LogPolicyManualPayout(policyId, "No Callback at +120 min"); */
+    if (bytes(_result).length == 0) {
+      // empty Result
+      // could try again to be redundant
+      return;
+    }
 
-    ///////
-    payOut(policyId, 0);
-    /* if (delayInMinutes < 15) {
-      payOut(policyId, 0, 0);
-    } else if (delayInMinutes < 30) {
-      payOut(policyId, 1, delayInMinutes);
-    } else if (delayInMinutes < 45) {
-      payOut(policyId, 2, delayInMinutes);
-    } else {
-      payOut(policyId, 3, delayInMinutes);
-    } */
+    // _result looks like: "cat5;100"
+    // where first part is event Category
+    // and second part is distance from event
+    var s = _result.toSlice();
+    var delim = ";".toSlice();
+    var parts = new string[](s.count(delim) + 1);
+    for(uint i = 0; i < parts.length; i++) {
+      parts[i] = s.split(delim).toString();
+    }
+
+    payOut(policyId, stringToBytes32(parts[0]), parseInt(parts[1]));
   }
 
   /*
@@ -134,24 +145,52 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
 
   /*
    * @dev Payout
-   * @param _policyId
-   * @param _windSpeed
+   * @param _policyId internal id
+   * @param _category the intensity of the event
+   * @param _distance the distance from the latlng to the event
    */
-  function payOut(uint _policyId, uint8 _windSpeed)	internal {
-    HR_DB.setWindSpeed(_policyId, _windSpeed);
+  function payOut(uint _policyId, bytes32 _category, uint _distance) internal {
+    // TODO: only setPayoutEvent for the initial trigger
+    // this could be a waste of gas
+    HR_DB.setHurricaneCategory(_policyId, _category);
 
-    if (_windSpeed == 0) {
+    // Distance is more than 30 miles
+    if (_distance > 48281) {
+      // is too far, therfore not covered
       HR_DB.setState(
         _policyId,
         policyState.Expired,
         now,
-        "Expired - no hurricane event!"
+        "Too far for payout"
       );
     } else {
-      var (customer, weight, premium) = HR_DB.getPolicyData(_policyId);
+      var (customer, weight, premium, ) = HR_DB.getPolicyData(_policyId);
 
-      // TODO: Implement multiplier table
-      uint payout = premium * 30;
+      uint multiplier = 1;
+      // 0 - 5 miles
+      if (0 < _distance && _distance < 8048) {
+        if (_category == "cat3") multiplier = 10;
+        if (_category == "cat4") multiplier = 20;
+        if (_category == "cat5") multiplier = 30;
+      }
+      // 5 - 15 miles
+      if (8048 < _distance && _distance < 24141) {
+        // cat3 pays 50% at this distance
+        if (_category == "cat3") multiplier = 5;
+        if (_category == "cat4") multiplier = 20;
+        if (_category == "cat5") multiplier = 30;
+      }
+      // 15 - 30 miles
+      if (24141 < _distance && _distance < 48280) {
+        // cat3 pays 20% at this distance
+        if (_category == "cat3") multiplier = 2;
+        // cat4 pays 50% at this distance
+        if (_category == "cat4") multiplier = 10;
+        // cat5 pays 70% at this distance
+        if (_category == "cat5") multiplier = 21;
+      }
+
+      uint payout = premium * multiplier;
       uint calculatedPayout = payout;
 
       if (payout > MAX_PAYOUT) {

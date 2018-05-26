@@ -36,13 +36,13 @@ contract HurricaneResponseDatabaseInterface is HurricaneResponseDatabaseModel {
 
   function getCustomerPremium(uint _policyId) returns (address _customer, uint _premium);
 
-  function getPolicyData(uint _policyId) returns (address _customer, uint _premium, uint _weight);
+  function getPolicyData(uint _policyId) returns (address _customer, uint _premium, uint _weight, bytes32 _latlng);
 
   function getPolicyState(uint _policyId) returns (policyState _state);
 
   function getRiskId(uint _policyId) returns (bytes32 _riskId);
 
-  function createPolicy(address _customer, uint _premium, Currency _currency, bytes32 _customerExternalId, bytes32 _riskId) returns (uint _policyId);
+  function createPolicy(address _customer, uint _premium, Currency _currency, bytes32 _customerExternalId, bytes32 _riskId, bytes32 _latlng) returns (uint _policyId);
 
   function setState(
     uint _policyId,
@@ -55,7 +55,7 @@ contract HurricaneResponseDatabaseInterface is HurricaneResponseDatabaseModel {
 
   function setPayouts(uint _policyId, uint _calculatedPayout, uint _actualPayout);
 
-  function setWindSpeed(uint _policyId, uint8 _windSpeed);
+  function setHurricaneCategory(uint _policyId, bytes32 _category);
 
   function getRiskParameters(bytes32 _riskId) returns (bytes32 _market, bytes32 _season);
 
