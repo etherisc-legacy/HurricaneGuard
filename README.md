@@ -1,8 +1,8 @@
 🌀 Parametric Hurricane Insurance Contracts 🌀
 =============================================
 
-HurricaneGuard is the first blockchain powered insurance contract available to people and businesses for weather risk coverage. The purpose of HurricaneGuard is to protect people and businesses from hurricane losses such as property damage, business losses, and loss of income using smart contracts on the blockchain and NOAA-validated weather parameters for immediate payout with days of a catastrophic disaster. 
-A web user interface can be found here.
+HurricaneGuard is the first blockchain powered insurance contract available to people and businesses for weather risk coverage. The purpose of HurricaneGuard is to protect people and businesses from hurricane losses such as property damage, business losses, and loss of income using smart contracts on the blockchain and NOAA-validated weather parameters for immediate payout within days of a catastrophic disaster. 
+A web user interface can be found [here](http://hurricaneguard.io).
 
 Features
 -----------
