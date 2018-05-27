@@ -9,9 +9,9 @@ Features
 * Available for property damage to homes, business losses, and loss of income
 * Built using Ethereum smart contracts
 * Measures hurricane force using NOAA-approved models
-* Policy contracts terms are public 
+* Policy contract terms are public 
 * Coverage is fully licensed
-* Optional cryptocurrency payment options
+* Cryptocurrency payment options
 * Optional email notifications when an hurricane event is close to your location
 
 Development
