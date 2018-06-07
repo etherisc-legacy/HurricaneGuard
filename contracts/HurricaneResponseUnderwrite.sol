@@ -38,9 +38,9 @@ contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, Hur
   function HurricaneResponseUnderwrite(address _controller) {
     setController(_controller);
     /* For testnet and mainnet */
-    oraclize_setProof(proofType_TLSNotary);
+    /* oraclize_setProof(proofType_TLSNotary); */
     /* For development */
-    /* OAR = OraclizeAddrResolverI(0x80e9c30A9dae62BCCf777E741bF2E312d828b65f); */
+    OAR = OraclizeAddrResolverI(0x80e9c30A9dae62BCCf777E741bF2E312d828b65f);
   }
 
   function setContracts() onlyController {
@@ -66,12 +66,8 @@ contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, Hur
   function scheduleUnderwriteOraclizeCall(uint _policyId, bytes32 _latlng) {
     require(HR_AC.checkPermission(101, msg.sender));
 
-    // TODO: use latlng to get accurate risk pricing
     string memory oraclizeUrl = strConcat(
-      ORACLIZE_RATINGS_BASE_URL,
-      /* b32toString(_latlng), */
-      "TJSJ",
-      ORACLIZE_RATINGS_QUERY
+      ORACLIZE_RATINGS_BASE_URL, "latlng=", b32toString(_latlng), ").result"
     );
 
     bytes32 queryId = oraclize_query("URL", oraclizeUrl, ORACLIZE_GAS);
@@ -185,7 +181,5 @@ contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, Hur
       _statistics[4],
       _statistics[5]
     );
-
-    // We would schedule the payout oraclize call here
   }
 }

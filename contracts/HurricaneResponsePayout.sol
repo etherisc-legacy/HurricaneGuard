@@ -39,6 +39,10 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
    */
   function HurricaneResponsePayout(address _controller) {
     setController(_controller);
+    /* For testnet and mainnet */
+    /* oraclize_setProof(proofType_TLSNotary); */
+    /* For development */
+    OAR = OraclizeAddrResolverI(0x80e9c30A9dae62BCCf777E741bF2E312d828b65f);
   }
 
   /*
@@ -53,7 +57,12 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
     HR_DB = HurricaneResponseDatabaseInterface(getContract("HR.Database"));
     HR_LG = HurricaneResponseLedgerInterface(getContract("HR.Ledger"));
 
-    HR_AC.setPermissionById(101, "HR.Underwrite");
+    // Calling payout function does not depend on Underwrite contract
+    // Customer Admin contract should have access to call schedulePayoutOraclizeCall
+    // Maybe it makes sense to leave the schedulePayoutOraclizeCall open
+    // that way a policy holder could event trigger a policy payout process
+    // themselves and don't need to trust keepers to execute payout process
+    HR_AC.setPermissionById(101, "HR.CustomersAdmin");
     HR_AC.setPermissionByAddress(101, oraclize_cbAddress());
     HR_AC.setPermissionById(102, "HR.Funder");
   }
@@ -81,16 +90,13 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
     var (, season) = HR_DB.getRiskParameters(_riskId);
     // Require payout to be in current season
     // TODO: should set policy as expired
-    require(season == strings.uintToBytes(getYear(block.timestamp)));
+
+    /* require(season == strings.uintToBytes(getYear(block.timestamp))); */
 
     var (, , , latlng) = HR_DB.getPolicyData(_policyId);
 
     string memory oraclizeUrl = strConcat(
-      ORACLIZE_STATUS_BASE_URL,
-      "latlng=",
-      b32toString(latlng),
-      "&start=2018-05-01", // for testing
-      ORACLIZE_STATUS_QUERY
+      ORACLIZE_STATUS_BASE_URL, "latlng=", b32toString(latlng), ").result"
     );
 
     bytes32 queryId = oraclize_query(_oraclizeTime, "URL", oraclizeUrl, ORACLIZE_GAS);
@@ -129,6 +135,7 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
     // _result looks like: "cat5;100"
     // where first part is event Category
     // and second part is distance from event
+
     var s = _result.toSlice();
     var delim = ";".toSlice();
     var parts = new string[](s.count(delim) + 1);
@@ -136,7 +143,14 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
       parts[i] = s.split(delim).toString();
     }
 
-    payOut(policyId, stringToBytes32(parts[0]), parseInt(parts[1]));
+    var category = stringToBytes32(parts[0]);
+    var distance = parseInt(parts[1]);
+
+    LogUint(policyId);
+    LogBytes32(category);
+    LogUint(distance);
+
+    payOut(policyId, category, distance);
   }
 
   /*
@@ -154,6 +168,8 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
     // this could be a waste of gas
     HR_DB.setHurricaneCategory(_policyId, _category);
 
+    LogString("STEP1");
+
     // Distance is more than 30 miles
     if (_distance > 48281) {
       // is too far, therfore not covered
@@ -166,55 +182,77 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
     } else {
       var (customer, weight, premium, ) = HR_DB.getPolicyData(_policyId);
 
-      uint multiplier = 1;
+      LogString("STEP2");
+      LogUint(premium);
+
+      uint multiplier = 0;
       // 0 - 5 miles
-      if (0 < _distance && _distance < 8048) {
-        if (_category == "cat3") multiplier = 10;
-        if (_category == "cat4") multiplier = 20;
-        if (_category == "cat5") multiplier = 30;
+      if (_distance < 8048) {
+        if (_category == "cat3_lower") multiplier = 10;
+        if (_category == "cat4_lower") multiplier = 20;
+        if (_category == "cat5_lower") multiplier = 30;
       }
       // 5 - 15 miles
       if (8048 < _distance && _distance < 24141) {
         // cat3 pays 50% at this distance
-        if (_category == "cat3") multiplier = 5;
-        if (_category == "cat4") multiplier = 20;
-        if (_category == "cat5") multiplier = 30;
+        if (_category == "cat3_lower") multiplier = 5;
+        if (_category == "cat4_lower") multiplier = 20;
+        if (_category == "cat5_lower") multiplier = 30;
       }
       // 15 - 30 miles
       if (24141 < _distance && _distance < 48280) {
         // cat3 pays 20% at this distance
-        if (_category == "cat3") multiplier = 2;
+        if (_category == "cat3_lower") multiplier = 2;
         // cat4 pays 50% at this distance
-        if (_category == "cat4") multiplier = 10;
+        if (_category == "cat4_lower") multiplier = 10;
         // cat5 pays 70% at this distance
-        if (_category == "cat5") multiplier = 21;
+        if (_category == "cat5_lower") multiplier = 21;
       }
 
-      uint payout = premium * multiplier;
-      uint calculatedPayout = payout;
+      LogString("STEP3");
+      LogUint(multiplier);
 
-      if (payout > MAX_PAYOUT) {
-        payout = MAX_PAYOUT;
-      }
-
-      HR_DB.setPayouts(_policyId, calculatedPayout, payout);
-
-      if (!HR_LG.sendFunds(customer, Acc.Payout, payout)) {
+      if (multiplier == 0) {
+        // No payable event happened for this policy
         HR_DB.setState(
           _policyId,
-          policyState.SendFailed,
+          policyState.Expired,
           now,
-          "Payout, send failed!"
+          "No covered event for payout"
         );
-
-        HR_DB.setPayouts(_policyId, calculatedPayout, 0);
       } else {
-        HR_DB.setState(
-          _policyId,
-          policyState.PaidOut,
-          now,
-          "Payout successful!"
-        );
+        uint payout = premium * multiplier;
+        uint calculatedPayout = payout;
+
+        if (payout > MAX_PAYOUT) {
+          payout = MAX_PAYOUT;
+        }
+
+        HR_DB.setPayouts(_policyId, calculatedPayout, payout);
+
+        LogString("STEP4");
+        LogUint(payout);
+
+        if (!HR_LG.sendFunds(customer, Acc.Payout, payout)) {
+          LogString("STEP5");
+
+          HR_DB.setState(
+            _policyId,
+            policyState.SendFailed,
+            now,
+            "Payout, send failed!"
+          );
+
+          HR_DB.setPayouts(_policyId, calculatedPayout, 0);
+        } else {
+          LogString("STEP5B");
+          HR_DB.setState(
+            _policyId,
+            policyState.PaidOut,
+            now,
+            "Payout successful!"
+          );
+        }
       }
     }
   }

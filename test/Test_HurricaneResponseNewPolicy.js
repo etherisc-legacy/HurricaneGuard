@@ -25,23 +25,15 @@ const testSuite = require('./HurricaneResponseNewPolicy_Suite.js')
 // const log = require('../util/logger')
 
 const doTests = [
-  '#01', // ETH - no hurricane event
-  '#02' // USD - no hurricane event
-  // '#21', // flightNumber == '21'  // 15-29 min. delay
-  // '#22', // flightNumber == '22'  // 30-44 min. delay
-  // '#23', // flightNumber == '23'  // >= 45 min. delay
-  // '#24', // flightNumber == '24'  // cancelled
-  // '#25', // flightNumber == '25'  // diverted
-  // '#26', // flightNumber == '26'  // never landing
-  // '#27', // flightNumber == '27'  // invalid status
-  // '#30', // flightNumber == '30'  // empty result
-  // '#31', // flightNumber == '31'  // invalid result
-  // '#32', // flightNumber == '32'  // too few observations
-  // '#41', // flightNumber == '41'  // premium too low
-  // '#42', // flightNumber == '42'  // premium too high
-  // '#43', // flightNumber == '43'    // invalid DepartureYearMonthDay
-  // '#44', // flightNumber == '44'  // invalid DepartureTime
-  // '#45' // flightNumber == '45'  // invalid ArrivalTime
+  '#01', // ETH - no covered hurricane event
+  '#02', // USD - no covered hurricane event
+  '#03', // USD - covered < 5 miles cat5 hurricane event
+  '#04', // USD - covered < 5 miles cat4 hurricane event
+  '#05', // USD - covered < 5 miles cat3 hurricane event
+  '#06', // USD - covered (5 < cat3 hurricane event < 15 miles)
+  '#07' // USD - covered (15 < cat4 hurricane event < 30 miles)
+  // '#08', // USD - covered (5 < cat5 hurricane event < 15 miles)
+  // '#09' // USD - no covered hurricane event (30 miles > cat5)
 ]
 
 const logger = new Logformatter(web3)
@@ -104,7 +96,7 @@ contract('HurricaneResponseNewPolicy', (accounts) => {
     lastState: undefined
   }
 
-  const testOne = (args) => {
+  const testOne = (args, index) => {
     it(args.shouldDoSomething, () => {
       const allEvents = []
       const instances = {}
@@ -177,7 +169,7 @@ contract('HurricaneResponseNewPolicy', (accounts) => {
           logger.logLine('Underwrite       Address: ', instances.UW.address, 'verbose')
           logger.logLine('Payout           Address: ', instances.PY.address, 'verbose')
 
-          const policy = args.data()
+          const policy = args.data(index)
 
           if (policy.currency > 0) {
             context.defAccount = accounts[3]
@@ -197,14 +189,33 @@ contract('HurricaneResponseNewPolicy', (accounts) => {
             args.timeoutHandler(resolve, reject, context),
             args.timeoutValue
           )
-          EE.on('logEvent', args.logHandler(resolve, reject, context))
+          EE.on('logEvent', args.logHandlerUnderwrite(resolve, reject, context))
         }))
-        .then(result => cleanup(result, true))
-        .catch(error => cleanup(error, false))
+        .then(() => {
+          clearTimeout(timeout)
+          const policy = args.data(index)
+          const tx = args.payoutTx({ ...context, defAccount: accounts[3] })
+          delete tx.value
+          return instances.PY.schedulePayoutOraclizeCall(
+            policy.id,
+            policy.riskId,
+            0,
+            tx
+          )
+        })
+        .then(receipt => new Promise((resolve, reject) => {
+          timeout = setTimeout(
+            args.timeoutHandler(resolve, reject, context),
+            args.timeoutValue
+          )
+          EE.on('logEvent', args.logHandlerPayout(resolve, reject, context))
+        }))
+        .then(result => { cleanup(result, true) })
+        .catch(error => { cleanup(error, false) })
     })
   }
 
-  doTests.forEach((key, i) => testOne(testSuite.find(testDef => testDef.testId === doTests[i])))
+  doTests.forEach((key, i) => testOne(testSuite.find(testDef => testDef.testId === doTests[i]), i))
 
   after(async () => {
     if (web3.version.network < 1000) {

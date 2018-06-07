@@ -62,7 +62,7 @@ contract('HurricaneResponsePayout', async (accounts) => {
 
   it('Access to `schedulePayoutOraclizeCall` should be limited', async () => {
     const permissions = utils.expectedPermissions(HR, accounts, {
-      'HR.Underwrite': 101
+      'HR.CustomersAdmin': 101
     })
 
     permissions.forEach(async (perm) => {

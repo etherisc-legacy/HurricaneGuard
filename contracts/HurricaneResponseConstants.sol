@@ -88,6 +88,14 @@ contract HurricaneResponseConstants {
   );
 
   /*
+  * Debug events
+  */
+
+  event LogBytes32(bytes32 _something);
+  event LogUint(uint _something);
+  event LogString(string _debug);
+
+  /*
   * General constants
   */
 
@@ -110,6 +118,7 @@ contract HurricaneResponseConstants {
   uint constant MAX_PREMIUM_GBP = 25000 wei;
   uint constant MAX_PAYOUT_GBP = 270 wei;
 
+  // WE NEED MAX EXPOSURE
   // maximum cumulated weighted premium per risk
   uint constant MAX_CUMULATED_WEIGHTED_PREMIUM = 60 ether;
   // 1 percent for DAO, 1 percent for maintainer
@@ -121,15 +130,11 @@ contract HurricaneResponseConstants {
   // This api is a placeholder until we can integrate
   // an accurate risk pricing service
   string constant ORACLIZE_RATINGS_BASE_URL =
-    "json(https://api.weather.gov/stations/";
-  string constant ORACLIZE_RATINGS_QUERY =
-    "/observations?limit=1).features[0].properties.windSpeed.value";
+    "json(http://ec2-35-173-178-191.compute-1.amazonaws.com/api/oracle/ratings/?";
 
   string constant ORACLIZE_STATUS_BASE_URL =
-    "json(https://ec2-35-173-178-191.compute-1.amazonaws.com/api/oracle/payout/?";
-  string constant ORACLIZE_STATUS_QUERY =
-    ").result";
+    "json(http://ec2-35-173-178-191.compute-1.amazonaws.com/api/oracle/status/?";
 
   // gas Constants for oraclize
-  uint constant ORACLIZE_GAS = 1000000;
+  uint constant ORACLIZE_GAS = 3500000;
 }
