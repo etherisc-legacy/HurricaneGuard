@@ -16,26 +16,26 @@
 pragma solidity ^0.4.11;
 
 
-import "./HurricaneResponseControlledContract.sol";
-import "./HurricaneResponseConstants.sol";
-import "./HurricaneResponseDatabaseInterface.sol";
-import "./HurricaneResponseAccessControllerInterface.sol";
-import "./HurricaneResponseLedgerInterface.sol";
-import "./HurricaneResponseUnderwriteInterface.sol";
-import "./HurricaneResponsePayoutInterface.sol";
-import "./HurricaneResponseOraclizeInterface.sol";
+import "./HurricaneGuardControlledContract.sol";
+import "./HurricaneGuardConstants.sol";
+import "./HurricaneGuardDatabaseInterface.sol";
+import "./HurricaneGuardAccessControllerInterface.sol";
+import "./HurricaneGuardLedgerInterface.sol";
+import "./HurricaneGuardUnderwriteInterface.sol";
+import "./HurricaneGuardPayoutInterface.sol";
+import "./HurricaneGuardOraclizeInterface.sol";
 import "./convertLib.sol";
 import "./../vendors/strings.sol";
 
-contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, HurricaneResponseConstants, HurricaneResponseOraclizeInterface, ConvertLib {
+contract HurricaneGuardUnderwrite is HurricaneGuardControlledContract, HurricaneGuardConstants, HurricaneGuardOraclizeInterface, ConvertLib {
   using strings for *;
 
-  HurricaneResponseDatabaseInterface HR_DB;
-  HurricaneResponseLedgerInterface HR_LG;
-  HurricaneResponsePayoutInterface HR_PY;
-  HurricaneResponseAccessControllerInterface HR_AC;
+  HurricaneGuardDatabaseInterface HG_DB;
+  HurricaneGuardLedgerInterface HG_LG;
+  HurricaneGuardPayoutInterface HG_PY;
+  HurricaneGuardAccessControllerInterface HG_AC;
 
-  function HurricaneResponseUnderwrite(address _controller) {
+  function HurricaneGuardUnderwrite(address _controller) {
     setController(_controller);
     /* For testnet and mainnet */
     /* oraclize_setProof(proofType_TLSNotary); */
@@ -44,27 +44,27 @@ contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, Hur
   }
 
   function setContracts() onlyController {
-    HR_AC = HurricaneResponseAccessControllerInterface(getContract("HR.AccessController"));
-    HR_DB = HurricaneResponseDatabaseInterface(getContract("HR.Database"));
-    HR_LG = HurricaneResponseLedgerInterface(getContract("HR.Ledger"));
-    HR_PY = HurricaneResponsePayoutInterface(getContract("HR.Payout"));
+    HG_AC = HurricaneGuardAccessControllerInterface(getContract("HG.AccessController"));
+    HG_DB = HurricaneGuardDatabaseInterface(getContract("HG.Database"));
+    HG_LG = HurricaneGuardLedgerInterface(getContract("HG.Ledger"));
+    HG_PY = HurricaneGuardPayoutInterface(getContract("HG.Payout"));
 
-    HR_AC.setPermissionById(101, "HR.NewPolicy");
-    HR_AC.setPermissionById(102, "HR.Funder");
+    HG_AC.setPermissionById(101, "HG.NewPolicy");
+    HG_AC.setPermissionById(102, "HG.Funder");
   }
 
   /*
    * @dev Fund contract
    */
   function fund() payable {
-    require(HR_AC.checkPermission(102, msg.sender));
+    require(HG_AC.checkPermission(102, msg.sender));
 
     // todo: bookkeeping
     // todo: fire funding event
   }
 
   function scheduleUnderwriteOraclizeCall(uint _policyId, bytes32 _latlng) {
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
     string memory oraclizeUrl = strConcat(
       ORACLIZE_RATINGS_BASE_URL, "latlng=", b32toString(_latlng), ").result"
@@ -73,7 +73,7 @@ contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, Hur
     bytes32 queryId = oraclize_query("URL", oraclizeUrl, ORACLIZE_GAS);
 
     // call oraclize to get Flight Stats; this will also call underwrite()
-    HR_DB.createOraclizeCallback(
+    HG_DB.createOraclizeCallback(
       queryId,
       _policyId,
       oraclizeState.ForUnderwriting
@@ -82,8 +82,8 @@ contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, Hur
     LogOraclizeCall(_policyId, queryId, oraclizeUrl);
   }
 
-  function __callback(bytes32 _queryId, string _result, bytes _proof) onlyOraclizeOr(getContract('HR.Emergency')) {
-    var (policyId,) = HR_DB.getOraclizeCallback(_queryId);
+  function __callback(bytes32 _queryId, string _result, bytes _proof) onlyOraclizeOr(getContract('HG.Emergency')) {
+    var (policyId,) = HG_DB.getOraclizeCallback(_queryId);
     LogOraclizeCallback(policyId, _queryId, _result, _proof);
 
     if (bytes(_result).length == 0) {
@@ -102,23 +102,23 @@ contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, Hur
   } // __callback
 
   function externalDecline(uint _policyId, bytes32 _reason) external {
-    require(msg.sender == HR_CI.getContract("HR.CustomersAdmin"));
+    require(msg.sender == HG_CI.getContract("HG.CustomersAdmin"));
 
     LogPolicyDeclined(_policyId, _reason);
 
-    HR_DB.setState(
+    HG_DB.setState(
       _policyId,
       policyState.Declined,
       now,
       _reason
     );
 
-    HR_DB.setWeight(_policyId, 0, "");
+    HG_DB.setWeight(_policyId, 0, "");
 
-    var (customer, premium) = HR_DB.getCustomerPremium(_policyId);
+    var (customer, premium) = HG_DB.getCustomerPremium(_policyId);
 
-    if (!HR_LG.sendFunds(customer, Acc.Premium, premium)) {
-      HR_DB.setState(
+    if (!HG_LG.sendFunds(customer, Acc.Premium, premium)) {
+      HG_DB.setState(
         _policyId,
         policyState.SendFailed,
         now,
@@ -130,20 +130,20 @@ contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, Hur
   function decline(uint _policyId, bytes32 _reason, bytes _proof)	internal {
     LogPolicyDeclined(_policyId, _reason);
 
-    HR_DB.setState(
+    HG_DB.setState(
       _policyId,
       policyState.Declined,
       now,
       _reason
     );
 
-    HR_DB.setWeight(_policyId, 0, _proof);
+    HG_DB.setWeight(_policyId, 0, _proof);
 
-    var (customer, premium) = HR_DB.getCustomerPremium(_policyId);
+    var (customer, premium) = HG_DB.getCustomerPremium(_policyId);
 
     // TODO: LOG
-    if (!HR_LG.sendFunds(customer, Acc.Premium, premium)) {
-      HR_DB.setState(
+    if (!HG_LG.sendFunds(customer, Acc.Premium, premium)) {
+      HG_DB.setState(
         _policyId,
         policyState.SendFailed,
         now,
@@ -153,19 +153,19 @@ contract HurricaneResponseUnderwrite is HurricaneResponseControlledContract, Hur
   }
 
   function underwrite(uint _policyId, uint[6] _statistics, bytes _proof) internal {
-    var (, premium) = HR_DB.getCustomerPremium(_policyId); // throws if _policyId invalid
-    bytes32 riskId = HR_DB.getRiskId(_policyId);
+    var (, premium) = HG_DB.getCustomerPremium(_policyId); // throws if _policyId invalid
+    bytes32 riskId = HG_DB.getRiskId(_policyId);
 
-    var (, premiumMultiplier) = HR_DB.getPremiumFactors(riskId);
-    var (, , arrivalTime) = HR_DB.getRiskParameters(riskId);
+    var (, premiumMultiplier) = HG_DB.getPremiumFactors(riskId);
+    var (, , arrivalTime) = HG_DB.getRiskParameters(riskId);
 
     // we calculate the factors to limit cluster risks.
     if (premiumMultiplier == 0) {
       // it's the first call, we accept any premium
-      HR_DB.setPremiumFactors(riskId, premium * 100000, 100000);
+      HG_DB.setPremiumFactors(riskId, premium * 100000, 100000);
     }
 
-    HR_DB.setState(
+    HG_DB.setState(
       _policyId,
       policyState.Accepted,
       now,

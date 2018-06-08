@@ -16,7 +16,7 @@
 pragma solidity ^0.4.11;
 
 
-contract HurricaneResponseAccessControllerInterface {
+contract HurricaneGuardAccessControllerInterface {
   function setPermissionById(uint8 _perm, bytes32 _id);
 
   function setPermissionById(uint8 _perm, bytes32 _id, bool _access);

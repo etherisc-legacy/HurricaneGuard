@@ -1,5 +1,5 @@
 /**
- * Unit tests for HurricaneResponseNewPolicy
+ * Unit tests for HurricaneGuardNewPolicy
  *
  * @author Christoph Mussenbrock
  * @description t.b.d
@@ -22,11 +22,11 @@
 
 const utils = require('../util/test-utils.js')
 
-contract('HurricaneResponsePayout', async (accounts) => {
-  let HR
+contract('HurricaneGuardPayout', async (accounts) => {
+  let HG
 
   before(async () => {
-    HR = await utils.getDeployedContracts(artifacts)
+    HG = await utils.getDeployedContracts(artifacts)
   })
 
   // todo: checkConstants
@@ -38,14 +38,14 @@ contract('HurricaneResponsePayout', async (accounts) => {
   /*
    * Initilization
    */
-  it('controller should be set to HR.Controller', async () => {
-    const controller = await HR.PY.controller.call()
-    assert.equal(controller, HR.C.address)
+  it('controller should be set to HG.Controller', async () => {
+    const controller = await HG.PY.controller.call()
+    assert.equal(controller, HG.C.address)
   })
 
-  it('HR.Payout should be registered in HR.Controller', async () => {
-    const addr = await HR.C.getContract.call('HR.Payout')
-    assert.equal(addr, HR.PY.address)
+  it('HG.Payout should be registered in HG.Controller', async () => {
+    const addr = await HG.C.getContract.call('HG.Payout')
+    assert.equal(addr, HG.PY.address)
   })
 
   // todo: check onlyController
@@ -56,21 +56,21 @@ contract('HurricaneResponsePayout', async (accounts) => {
    * setContracts tests
    */
   // it('Should not be accessed from external account', async () => {
-  //   await HR.PY.setContracts()
+  //   await HG.PY.setContracts()
   //     .should.be.rejectedWith(utils.EVMThrow)
   // })
 
   it('Access to `schedulePayoutOraclizeCall` should be limited', async () => {
-    const permissions = utils.expectedPermissions(HR, accounts, {
-      'HR.CustomersAdmin': 101
+    const permissions = utils.expectedPermissions(HG, accounts, {
+      'HG.CustomersAdmin': 101
     })
 
     permissions.forEach(async (perm) => {
       const [ label, caller, access ] = perm
 
       assert.equal(
-        await HR.DB.getAccessControl.call(
-          HR.PY.address,
+        await HG.DB.getAccessControl.call(
+          HG.PY.address,
           caller,
           access
         ),
@@ -80,16 +80,16 @@ contract('HurricaneResponsePayout', async (accounts) => {
   })
 
   it('Access to `fund` should be limited', async () => {
-    const permissions = utils.expectedPermissions(HR, accounts, {
-      'HR.Funder': 102
+    const permissions = utils.expectedPermissions(HG, accounts, {
+      'HG.Funder': 102
     })
 
     permissions.forEach(async (perm) => {
       const [ label, caller, access ] = perm
 
       assert.equal(
-        await HR.DB.getAccessControl.call(
-          HR.PY.address,
+        await HG.DB.getAccessControl.call(
+          HG.PY.address,
           caller,
           access
         ),
@@ -101,18 +101,18 @@ contract('HurricaneResponsePayout', async (accounts) => {
   /*
    * fund tests
    */
-  // it('Should accept ETH from HR.Funder', async () => {
-  //   const balanceBefore = web3.eth.getBalance(HR.PY.address)
+  // it('Should accept ETH from HG.Funder', async () => {
+  //   const balanceBefore = web3.eth.getBalance(HG.PY.address)
   //   const value = web3.toWei(10, 'ether')
   //
   //   try {
-  //     await HR.PY.fund({ from: accounts[2], value })
+  //     await HG.PY.fund({ from: accounts[2], value })
   //     assert.ok('should not be rejected')
   //   } catch (error) {
   //     utils.assertJump(error)
   //   }
   //
-  //   const balanceAfter = web3.eth.getBalance(HR.PY.address)
+  //   const balanceAfter = web3.eth.getBalance(HG.PY.address)
   //
   //   Number(balanceAfter).should.be.greaterThan(Number(balanceBefore))
   //   Number(balanceAfter).should.be.equal(Number(value) + Number(balanceBefore))
@@ -120,7 +120,7 @@ contract('HurricaneResponsePayout', async (accounts) => {
 
   // it('Should not accept ETH from other accounts', async () => {
   //   try {
-  //     await HR.PY.fund({ from: accounts[1], value: web3.toWei(10, 'ether') })
+  //     await HG.PY.fund({ from: accounts[1], value: web3.toWei(10, 'ether') })
   //     assert.fail('should be rejected')
   //   } catch (error) {
   //     utils.assertJump(error)
@@ -141,7 +141,7 @@ contract('HurricaneResponsePayout', async (accounts) => {
 
   after(async () => {
     if (web3.version.network < 1000) {
-      await HR.C.destructAll({ from: accounts[1], gas: 4700000 })
+      await HG.C.destructAll({ from: accounts[1], gas: 4700000 })
     }
   })
 })

@@ -16,7 +16,7 @@
 pragma solidity ^0.4.11;
 
 
-contract HurricaneResponseDatabaseModel {
+contract HurricaneGuardDatabaseModel {
 
   // Ledger accounts.
   enum Acc {

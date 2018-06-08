@@ -16,9 +16,9 @@
 pragma solidity ^0.4.11;
 
 
-import "./HurricaneResponseDatabaseModel.sol";
+import "./HurricaneGuardDatabaseModel.sol";
 
-contract HurricaneResponseDatabaseInterface is HurricaneResponseDatabaseModel {
+contract HurricaneGuardDatabaseInterface is HurricaneGuardDatabaseModel {
   function setAccessControl(address _contract, address _caller, uint8 _perm);
 
   function setAccessControl(

@@ -16,12 +16,12 @@
 pragma solidity ^0.4.11;
 
 
-import "./HurricaneResponseControllerInterface.sol";
-import "./HurricaneResponseDatabaseModel.sol";
+import "./HurricaneGuardControllerInterface.sol";
+import "./HurricaneGuardDatabaseModel.sol";
 
-contract HurricaneResponseControlledContract is HurricaneResponseDatabaseModel {
+contract HurricaneGuardControlledContract is HurricaneGuardDatabaseModel {
   address public controller;
-  HurricaneResponseControllerInterface HR_CI;
+  HurricaneGuardControllerInterface HG_CI;
 
   modifier onlyController() {
     require(msg.sender == controller);
@@ -30,7 +30,7 @@ contract HurricaneResponseControlledContract is HurricaneResponseDatabaseModel {
 
   function setController(address _controller) internal returns (bool _result) {
     controller = _controller;
-    HR_CI = HurricaneResponseControllerInterface(_controller);
+    HG_CI = HurricaneGuardControllerInterface(_controller);
     _result = true;
   }
 
@@ -41,6 +41,6 @@ contract HurricaneResponseControlledContract is HurricaneResponseDatabaseModel {
   function setContracts() onlyController {}
 
   function getContract(bytes32 _id) internal returns (address _addr) {
-    _addr = HR_CI.getContract(_id);
+    _addr = HG_CI.getContract(_id);
   }
 }

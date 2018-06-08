@@ -16,7 +16,7 @@
 pragma solidity ^0.4.11;
 
 
-contract HurricaneResponseConstants {
+contract HurricaneGuardConstants {
   /*
   * General events
   */
@@ -91,9 +91,9 @@ contract HurricaneResponseConstants {
   * Debug events
   */
 
-  event LogBytes32(bytes32 _something);
+  /* event LogBytes32(bytes32 _something);
   event LogUint(uint _something);
-  event LogString(string _debug);
+  event LogString(string _debug); */
 
   /*
   * General constants

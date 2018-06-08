@@ -16,12 +16,12 @@
 pragma solidity ^0.4.11;
 
 
-import "./HurricaneResponseControlledContract.sol";
-import "./HurricaneResponseDatabaseInterface.sol";
-import "./HurricaneResponseAccessControllerInterface.sol";
-import "./HurricaneResponseConstants.sol";
+import "./HurricaneGuardControlledContract.sol";
+import "./HurricaneGuardDatabaseInterface.sol";
+import "./HurricaneGuardAccessControllerInterface.sol";
+import "./HurricaneGuardConstants.sol";
 
-contract HurricaneResponseDatabase is HurricaneResponseControlledContract, HurricaneResponseDatabaseInterface, HurricaneResponseConstants {
+contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGuardDatabaseInterface, HurricaneGuardConstants {
   // Table of policies
   Policy[] public policies;
 
@@ -44,20 +44,20 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
   // Lookup accounts of internal ledger
   int[6] public ledger;
 
-  HurricaneResponseAccessControllerInterface HR_AC;
+  HurricaneGuardAccessControllerInterface HG_AC;
 
-  function HurricaneResponseDatabase (address _controller) {
+  function HurricaneGuardDatabase (address _controller) {
     setController(_controller);
   }
 
   function setContracts() onlyController {
-    HR_AC = HurricaneResponseAccessControllerInterface(getContract("HR.AccessController"));
+    HG_AC = HurricaneGuardAccessControllerInterface(getContract("HG.AccessController"));
 
-    HR_AC.setPermissionById(101, "HR.NewPolicy");
-    HR_AC.setPermissionById(101, "HR.Underwrite");
+    HG_AC.setPermissionById(101, "HG.NewPolicy");
+    HG_AC.setPermissionById(101, "HG.Underwrite");
 
-    HR_AC.setPermissionById(101, "HR.Payout");
-    HR_AC.setPermissionById(101, "HR.Ledger");
+    HG_AC.setPermissionById(101, "HG.Payout");
+    HG_AC.setPermissionById(101, "HG.Ledger");
   }
 
   // Getter and Setter for AccessControl
@@ -68,7 +68,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
     bool _access
   ) {
     // one and only hardcoded accessControl
-    require(msg.sender == HR_CI.getContract("HR.AccessController"));
+    require(msg.sender == HG_CI.getContract("HG.AccessController"));
     accessControl[_contract][_caller][_perm] = _access;
   }
 
@@ -87,7 +87,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
 
   // Getter and Setter for ledger
   function setLedger(uint8 _index, int _value) {
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
     int previous = ledger[_index];
     ledger[_index] += _value;
@@ -130,7 +130,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
   }
 
   function createPolicy(address _customer, uint _premium, Currency _currency, bytes32 _customerExternalId, bytes32 _riskId, bytes32 _latlng) returns (uint _policyId) {
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
     _policyId = policies.length++;
 
@@ -153,7 +153,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
     uint _stateTime,
     bytes32 _stateMessage
   ) {
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
     LogSetState(
       _policyId,
@@ -170,7 +170,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
   }
 
   function setWeight(uint _policyId, uint _weight, bytes _proof) {
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
     Policy storage p = policies[_policyId];
 
@@ -179,7 +179,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
   }
 
   function setPayouts(uint _policyId, uint _calculatedPayout, uint _actualPayout) {
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
     Policy storage p = policies[_policyId];
 
@@ -188,7 +188,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
   }
 
   function setHurricaneCategory(uint _policyId, bytes32 _category) {
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
     Risk storage r = risks[policies[_policyId].riskId];
 
@@ -209,7 +209,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
   }
 
   function createUpdateRisk(bytes32 _market, bytes32 _season) returns (bytes32 _riskId) {
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
     _riskId = keccak256(
       _market,
@@ -225,7 +225,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
   }
 
   function setPremiumFactors(bytes32 _riskId, uint _cumulatedWeightedPremium, uint _premiumMultiplier) {
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
     Risk storage r = risks[_riskId];
     r.cumulatedWeightedPremium = _cumulatedWeightedPremium;
@@ -247,7 +247,7 @@ contract HurricaneResponseDatabase is HurricaneResponseControlledContract, Hurri
     uint _policyId,
     oraclizeState _oraclizeState
   ) {
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
     oraclizeCallbacks[_queryId] = OraclizeCallback(_policyId, _oraclizeState);
   }
