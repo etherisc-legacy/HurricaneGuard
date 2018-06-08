@@ -31,9 +31,9 @@ const doTests = [
   '#04', // USD - covered < 5 miles cat4 hurricane event
   '#05', // USD - covered < 5 miles cat3 hurricane event
   '#06', // USD - covered (5 < cat3 hurricane event < 15 miles)
-  '#07' // USD - covered (15 < cat4 hurricane event < 30 miles)
-  // '#08', // USD - covered (5 < cat5 hurricane event < 15 miles)
-  // '#09' // USD - no covered hurricane event (30 miles > cat5)
+  '#07', // USD - covered (15 < cat4 hurricane event < 30 miles)
+  '#08', // USD - covered (5 < cat5 hurricane event < 15 miles)
+  '#09' // USD - no covered hurricane event (30 miles > cat5)
 ]
 
 const logger = new Logformatter(web3)

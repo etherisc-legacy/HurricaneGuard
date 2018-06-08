@@ -84,18 +84,18 @@ module.exports = (deployer, network, accounts) => {
     .then(() => HurricaneResponseLedger.deployed())
     .then(HR_LG => {
       log.info(`Funder: ${accounts[2]}`)
-      return HR_LG.fund({from: accounts[2], value: fund(1), gas: 5e5})
+      return HR_LG.fund({from: accounts[2], value: fund(2), gas: 5e5})
     })
 
     // Fund HR.Underwrite
     .then(() => log.info('Fund HR.Underwrite'))
     .then(() => HurricaneResponseUnderwrite.deployed())
-    .then(HR_UW => HR_UW.fund({from: accounts[2], value: fund(0.5), gas: 5e5}))
+    .then(HR_UW => HR_UW.fund({from: accounts[2], value: fund(1.5), gas: 5e5}))
 
     // Fund HR.Payout
     .then(() => log.info('Fund HR.Payout'))
     .then(() => HurricaneResponsePayout.deployed())
-    .then(HR_PY => HR_PY.fund({from: accounts[2], value: fund(0.5), gas: 5e5}))
+    .then(HR_PY => HR_PY.fund({from: accounts[2], value: fund(1.5), gas: 5e5}))
 
     .then(() => log.info('Deploy AddressResolver'))
 

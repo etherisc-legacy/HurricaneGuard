@@ -47,9 +47,9 @@ contract('After deploy', (accounts) => {
 
   const ledger = {
     Premium: 0,
-    RiskFund: 1000000000000000000,
+    RiskFund: 2000000000000000000,
     Payout: 0,
-    Balance: -1000000000000000000,
+    Balance: -2000000000000000000,
     Reward: 0,
     OraclizeCosts: 0
   }
