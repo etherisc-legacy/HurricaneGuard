@@ -17,9 +17,9 @@ pragma solidity ^0.4.11;
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
-import "../contracts/HurricaneResponseOraclizeInterface.sol";
+import "../contracts/HurricaneGuardOraclizeInterface.sol";
 
-contract Test_Oraclize is HurricaneResponseOraclizeInterface {
+contract Test_Oraclize is HurricaneGuardOraclizeInterface {
 	bytes32 queryId;
   event LogBytes32(string _message, bytes32 hexBytes32);
   event LogBytes(string _message, bytes hexBytes);

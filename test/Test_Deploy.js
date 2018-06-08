@@ -17,32 +17,32 @@
 
 const utils = require('../util/test-utils.js')
 
-const HurricaneResponseController = artifacts.require('HurricaneResponseController')
-const HurricaneResponseAccessController = artifacts.require('HurricaneResponseAccessController')
-const HurricaneResponseDatabase = artifacts.require('HurricaneResponseDatabase')
-const HurricaneResponseLedger = artifacts.require('HurricaneResponseLedger')
-const HurricaneResponseNewPolicy = artifacts.require('HurricaneResponseNewPolicy')
-const HurricaneResponseUnderwrite = artifacts.require('HurricaneResponseUnderwrite')
-const HurricaneResponsePayout = artifacts.require('HurricaneResponsePayout')
+const HurricaneGuardController = artifacts.require('HurricaneGuardController')
+const HurricaneGuardAccessController = artifacts.require('HurricaneGuardAccessController')
+const HurricaneGuardDatabase = artifacts.require('HurricaneGuardDatabase')
+const HurricaneGuardLedger = artifacts.require('HurricaneGuardLedger')
+const HurricaneGuardNewPolicy = artifacts.require('HurricaneGuardNewPolicy')
+const HurricaneGuardUnderwrite = artifacts.require('HurricaneGuardUnderwrite')
+const HurricaneGuardPayout = artifacts.require('HurricaneGuardPayout')
 
 const contractLabel = contract => web3.toUtf8(contract)
 
 contract('After deploy', (accounts) => {
   let HRC
-  let HR_DB
+  let HG_DB
 
   const contracts = {
-    'HR.Owner': accounts[1],
-    'HR.Controller': HurricaneResponseController,
-    'HR.Funder': accounts[2],
-    'HR.CustomersAdmin': accounts[3],
-    'HR.Emergency': accounts[4],
-    'HR.AccessController': HurricaneResponseAccessController,
-    'HR.Database': HurricaneResponseDatabase,
-    'HR.Ledger': HurricaneResponseLedger,
-    'HR.NewPolicy': HurricaneResponseNewPolicy,
-    'HR.Underwrite': HurricaneResponseUnderwrite,
-    'HR.Payout': HurricaneResponsePayout
+    'HG.Owner': accounts[1],
+    'HG.Controller': HurricaneGuardController,
+    'HG.Funder': accounts[2],
+    'HG.CustomersAdmin': accounts[3],
+    'HG.Emergency': accounts[4],
+    'HG.AccessController': HurricaneGuardAccessController,
+    'HG.Database': HurricaneGuardDatabase,
+    'HG.Ledger': HurricaneGuardLedger,
+    'HG.NewPolicy': HurricaneGuardNewPolicy,
+    'HG.Underwrite': HurricaneGuardUnderwrite,
+    'HG.Payout': HurricaneGuardPayout
   }
 
   const ledger = {
@@ -55,8 +55,8 @@ contract('After deploy', (accounts) => {
   }
 
   before(async () => {
-    HRC = await HurricaneResponseController.deployed()
-    HR_DB = await HurricaneResponseDatabase.deployed()
+    HRC = await HurricaneGuardController.deployed()
+    HG_DB = await HurricaneGuardDatabase.deployed()
   })
 
   Object.keys(contracts).forEach((key, i) =>
@@ -70,15 +70,15 @@ contract('After deploy', (accounts) => {
   )
 
   Object.keys(ledger).forEach((key, i) => {
-    it(`${key} in HR.Database should be set to ${ledger[key]}`, async () => {
-      const value = await HR_DB.ledger(i)
+    it(`${key} in HG.Database should be set to ${ledger[key]}`, async () => {
+      const value = await HG_DB.ledger(i)
       assert.equal(ledger[key], value.valueOf())
     })
   })
 
   it('should throw on invalid index in ledger', async () => {
     try {
-      await HR_DB.ledger(6)
+      await HG_DB.ledger(6)
       assert.fail('should have thrown before')
     } catch (error) {
       utils.assertJump(error)

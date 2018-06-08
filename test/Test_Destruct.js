@@ -1,5 +1,5 @@
 /**
- * Unit tests for HurricaneResponseNewPolicy
+ * Unit tests for HurricaneGuardNewPolicy
  *
  * @author Christoph Mussenbrock
  * @description t.b.d
@@ -20,26 +20,26 @@
 
 const log = require('../util/logger')
 
-const HurricaneResponseAccessController = artifacts.require('HurricaneResponseAccessController')
-const HurricaneResponseController = artifacts.require('HurricaneResponseController')
-const HurricaneResponseDatabase = artifacts.require('HurricaneResponseDatabase')
-const HurricaneResponseLedger = artifacts.require('HurricaneResponseLedger')
-const HurricaneResponseNewPolicy = artifacts.require('HurricaneResponseNewPolicy')
-const HurricaneResponseUnderwrite = artifacts.require('HurricaneResponseUnderwrite')
-const HurricaneResponsePayout = artifacts.require('HurricaneResponsePayout')
+const HurricaneGuardAccessController = artifacts.require('HurricaneGuardAccessController')
+const HurricaneGuardController = artifacts.require('HurricaneGuardController')
+const HurricaneGuardDatabase = artifacts.require('HurricaneGuardDatabase')
+const HurricaneGuardLedger = artifacts.require('HurricaneGuardLedger')
+const HurricaneGuardNewPolicy = artifacts.require('HurricaneGuardNewPolicy')
+const HurricaneGuardUnderwrite = artifacts.require('HurricaneGuardUnderwrite')
+const HurricaneGuardPayout = artifacts.require('HurricaneGuardPayout')
 
 contract('Test group: Destruct all contracts', (accounts) => {
   it('should destroy all contracts and refund to owner', async () => {
     const instances = {}
     let grandTotal = 0
 
-    instances.CT = await HurricaneResponseController.deployed()
-    instances.AC = await HurricaneResponseAccessController.deployed()
-    instances.DB = await HurricaneResponseDatabase.deployed()
-    instances.LG = await HurricaneResponseLedger.deployed()
-    instances.NP = await HurricaneResponseNewPolicy.deployed()
-    instances.UW = await HurricaneResponseUnderwrite.deployed()
-    instances.PY = await HurricaneResponsePayout.deployed()
+    instances.CT = await HurricaneGuardController.deployed()
+    instances.AC = await HurricaneGuardAccessController.deployed()
+    instances.DB = await HurricaneGuardDatabase.deployed()
+    instances.LG = await HurricaneGuardLedger.deployed()
+    instances.NP = await HurricaneGuardNewPolicy.deployed()
+    instances.UW = await HurricaneGuardUnderwrite.deployed()
+    instances.PY = await HurricaneGuardPayout.deployed()
 
     const accountBalance = web3.fromWei(await web3.eth.getBalance(accounts[1]), 'ether').toFixed(2)
     grandTotal += Number(accountBalance)

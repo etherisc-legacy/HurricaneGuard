@@ -27,13 +27,13 @@ module.exports.EVMThow = () => 'invalid opcode'
  * @returns
  */
 module.exports.getDeployedContracts = async () => ({
-  PY: await artifacts.require('HurricaneResponsePayout').deployed(),
-  DB: await artifacts.require('HurricaneResponseDatabase').deployed(),
-  AC: await artifacts.require('HurricaneResponseAccessController').deployed(),
-  UW: await artifacts.require('HurricaneResponseUnderwrite').deployed(),
-  LG: await artifacts.require('HurricaneResponseLedger').deployed(),
-  NP: await artifacts.require('HurricaneResponseNewPolicy').deployed(),
-  C: await artifacts.require('HurricaneResponseController').deployed()
+  PY: await artifacts.require('HurricaneGuardPayout').deployed(),
+  DB: await artifacts.require('HurricaneGuardDatabase').deployed(),
+  AC: await artifacts.require('HurricaneGuardAccessController').deployed(),
+  UW: await artifacts.require('HurricaneGuardUnderwrite').deployed(),
+  LG: await artifacts.require('HurricaneGuardLedger').deployed(),
+  NP: await artifacts.require('HurricaneGuardNewPolicy').deployed(),
+  C: await artifacts.require('HurricaneGuardController').deployed()
 })
 
 /**
@@ -44,19 +44,19 @@ module.exports.getDeployedContracts = async () => ({
  * @param {any} permissions
  * @returns
  */
-module.exports.expectedPermissions = (HR, accounts, permissions) => {
+module.exports.expectedPermissions = (HG, accounts, permissions) => {
   const permissionsSet = [
-    ['HR.Owner', accounts[1], false],
-    ['HR.Funder', accounts[2], false],
-    ['HR.CustomersAdmin', accounts[3], false],
-    ['HR.Emergency', accounts[4], false],
-    ['HR.Controller', HR.C.address, false],
-    ['HR.Database', HR.DB.address, false],
-    ['HR.Ledger', HR.LG.address, false],
-    ['HR.Payout', HR.PY.address, false],
-    ['HR.Underwrite', HR.UW.address, false],
-    ['HR.NewPolicy', HR.NP.address, false],
-    ['HR.AccessController', HR.AC.address, false],
+    ['HG.Owner', accounts[1], false],
+    ['HG.Funder', accounts[2], false],
+    ['HG.CustomersAdmin', accounts[3], false],
+    ['HG.Emergency', accounts[4], false],
+    ['HG.Controller', HG.C.address, false],
+    ['HG.Database', HG.DB.address, false],
+    ['HG.Ledger', HG.LG.address, false],
+    ['HG.Payout', HG.PY.address, false],
+    ['HG.Underwrite', HG.UW.address, false],
+    ['HG.NewPolicy', HG.NP.address, false],
+    ['HG.AccessController', HG.AC.address, false],
     ['deployer', accounts[0], false],
     ['customer', accounts[5], false],
     ['oraclize', accounts[6], false]

@@ -16,28 +16,28 @@
 pragma solidity ^0.4.11;
 
 
-import "./HurricaneResponseControlledContract.sol";
-import "./HurricaneResponseConstants.sol";
-import "./HurricaneResponseDatabaseInterface.sol";
-import "./HurricaneResponseAccessControllerInterface.sol";
-import "./HurricaneResponseLedgerInterface.sol";
-import "./HurricaneResponsePayoutInterface.sol";
-import "./HurricaneResponseOraclizeInterface.sol";
+import "./HurricaneGuardControlledContract.sol";
+import "./HurricaneGuardConstants.sol";
+import "./HurricaneGuardDatabaseInterface.sol";
+import "./HurricaneGuardAccessControllerInterface.sol";
+import "./HurricaneGuardLedgerInterface.sol";
+import "./HurricaneGuardPayoutInterface.sol";
+import "./HurricaneGuardOraclizeInterface.sol";
 import "./convertLib.sol";
 import "./../vendors/strings.sol";
 
-contract HurricaneResponsePayout is HurricaneResponseControlledContract, HurricaneResponseConstants, HurricaneResponseOraclizeInterface, ConvertLib {
+contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuardConstants, HurricaneGuardOraclizeInterface, ConvertLib {
   using strings for *;
 
-  HurricaneResponseDatabaseInterface HR_DB;
-  HurricaneResponseLedgerInterface HR_LG;
-  HurricaneResponseAccessControllerInterface HR_AC;
+  HurricaneGuardDatabaseInterface HG_DB;
+  HurricaneGuardLedgerInterface HG_LG;
+  HurricaneGuardAccessControllerInterface HG_AC;
 
   /*
    * @dev Contract constructor sets its controller
    * @param _controller FD.Controller
    */
-  function HurricaneResponsePayout(address _controller) {
+  function HurricaneGuardPayout(address _controller) {
     setController(_controller);
     /* For testnet and mainnet */
     /* oraclize_setProof(proofType_TLSNotary); */
@@ -53,25 +53,25 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
    * @dev Set access permissions for methods
    */
   function setContracts() public onlyController {
-    HR_AC = HurricaneResponseAccessControllerInterface(getContract("HR.AccessController"));
-    HR_DB = HurricaneResponseDatabaseInterface(getContract("HR.Database"));
-    HR_LG = HurricaneResponseLedgerInterface(getContract("HR.Ledger"));
+    HG_AC = HurricaneGuardAccessControllerInterface(getContract("HG.AccessController"));
+    HG_DB = HurricaneGuardDatabaseInterface(getContract("HG.Database"));
+    HG_LG = HurricaneGuardLedgerInterface(getContract("HG.Ledger"));
 
     // Calling payout function does not depend on Underwrite contract
     // Customer Admin contract should have access to call schedulePayoutOraclizeCall
     // Maybe it makes sense to leave the schedulePayoutOraclizeCall open
     // that way a policy holder could event trigger a policy payout process
     // themselves and don't need to trust keepers to execute payout process
-    HR_AC.setPermissionById(101, "HR.CustomersAdmin");
-    HR_AC.setPermissionByAddress(101, oraclize_cbAddress());
-    HR_AC.setPermissionById(102, "HR.Funder");
+    HG_AC.setPermissionById(101, "HG.CustomersAdmin");
+    HG_AC.setPermissionByAddress(101, oraclize_cbAddress());
+    HG_AC.setPermissionById(102, "HG.Funder");
   }
 
   /*
    * @dev Fund contract
    */
   function fund() payable {
-    require(HR_AC.checkPermission(102, msg.sender));
+    require(HG_AC.checkPermission(102, msg.sender));
 
     // todo: bookkeeping
     // todo: fire funding event
@@ -85,15 +85,15 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
    */
   function schedulePayoutOraclizeCall(uint _policyId, bytes32 _riskId, uint _oraclizeTime) public {
     // TODO: decide wether a policy holder could trigger their own payout function
-    require(HR_AC.checkPermission(101, msg.sender));
+    require(HG_AC.checkPermission(101, msg.sender));
 
-    var (, season) = HR_DB.getRiskParameters(_riskId);
+    var (, season) = HG_DB.getRiskParameters(_riskId);
     // Require payout to be in current season
     // TODO: should set policy as expired
 
     /* require(season == strings.uintToBytes(getYear(block.timestamp))); */
 
-    var (, , , latlng) = HR_DB.getPolicyData(_policyId);
+    var (, , , latlng) = HG_DB.getPolicyData(_policyId);
 
     string memory oraclizeUrl = strConcat(
       ORACLIZE_STATUS_BASE_URL, "latlng=", b32toString(latlng), ").result"
@@ -101,7 +101,7 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
 
     bytes32 queryId = oraclize_query(_oraclizeTime, "URL", oraclizeUrl, ORACLIZE_GAS);
 
-    HR_DB.createOraclizeCallback(
+    HG_DB.createOraclizeCallback(
       queryId,
       _policyId,
       oraclizeState.ForPayout
@@ -116,15 +116,15 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
    * @param _result
    * @param _proof
    */
-  function __callback(bytes32 _queryId, string _result, bytes _proof) public onlyOraclizeOr(getContract('HR.Emergency')) {
-    var (policyId) = HR_DB.getOraclizeCallback(_queryId);
+  function __callback(bytes32 _queryId, string _result, bytes _proof) public onlyOraclizeOr(getContract('HG.Emergency')) {
+    var (policyId) = HG_DB.getOraclizeCallback(_queryId);
     LogOraclizeCallback(policyId, _queryId, _result, _proof);
 
     // check if policy was declined after this callback was scheduled
-    var state = HR_DB.getPolicyState(policyId);
+    var state = HG_DB.getPolicyState(policyId);
     require(uint8(state) != 5);
 
-    bytes32 riskId = HR_DB.getRiskId(policyId);
+    bytes32 riskId = HG_DB.getRiskId(policyId);
 
     if (bytes(_result).length == 0) {
       // empty Result
@@ -146,10 +146,6 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
     var category = stringToBytes32(parts[0]);
     var distance = parseInt(parts[1]);
 
-    LogUint(policyId);
-    LogBytes32(category);
-    LogUint(distance);
-
     payOut(policyId, category, distance);
   }
 
@@ -166,24 +162,19 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
   function payOut(uint _policyId, bytes32 _category, uint _distance) internal {
     // TODO: only setPayoutEvent for the initial trigger
     // this could be a waste of gas
-    HR_DB.setHurricaneCategory(_policyId, _category);
-
-    LogString("STEP1");
+    HG_DB.setHurricaneCategory(_policyId, _category);
 
     // Distance is more than 30 miles
     if (_distance > 48281) {
       // is too far, therfore not covered
-      HR_DB.setState(
+      HG_DB.setState(
         _policyId,
         policyState.Expired,
         now,
         "Too far for payout"
       );
     } else {
-      var (customer, weight, premium, ) = HR_DB.getPolicyData(_policyId);
-
-      LogString("STEP2");
-      LogUint(premium);
+      var (customer, weight, premium, ) = HG_DB.getPolicyData(_policyId);
 
       uint multiplier = 0;
       // 0 - 5 miles
@@ -209,12 +200,9 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
         if (_category == "cat5_lower") multiplier = 21;
       }
 
-      LogString("STEP3");
-      LogUint(multiplier);
-
       if (multiplier == 0) {
         // No payable event happened for this policy
-        HR_DB.setState(
+        HG_DB.setState(
           _policyId,
           policyState.Expired,
           now,
@@ -228,25 +216,19 @@ contract HurricaneResponsePayout is HurricaneResponseControlledContract, Hurrica
           payout = MAX_PAYOUT;
         }
 
-        HR_DB.setPayouts(_policyId, calculatedPayout, payout);
+        HG_DB.setPayouts(_policyId, calculatedPayout, payout);
 
-        LogString("STEP4");
-        LogUint(payout);
-
-        if (!HR_LG.sendFunds(customer, Acc.Payout, payout)) {
-          LogString("STEP5");
-
-          HR_DB.setState(
+        if (!HG_LG.sendFunds(customer, Acc.Payout, payout)) {
+          HG_DB.setState(
             _policyId,
             policyState.SendFailed,
             now,
             "Payout, send failed!"
           );
 
-          HR_DB.setPayouts(_policyId, calculatedPayout, 0);
+          HG_DB.setPayouts(_policyId, calculatedPayout, 0);
         } else {
-          LogString("STEP5B");
-          HR_DB.setState(
+          HG_DB.setState(
             _policyId,
             policyState.PaidOut,
             now,

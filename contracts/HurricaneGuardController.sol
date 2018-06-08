@@ -17,10 +17,10 @@ pragma solidity ^0.4.11;
 
 
 import "./Ownable.sol";
-import "./HurricaneResponseControlledContract.sol";
-import "./HurricaneResponseConstants.sol";
+import "./HurricaneGuardControlledContract.sol";
+import "./HurricaneGuardConstants.sol";
 
-contract HurricaneResponseController is Ownable, HurricaneResponseConstants {
+contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
   struct Controller {
     address addr;
     bool isControlled;
@@ -33,9 +33,9 @@ contract HurricaneResponseController is Ownable, HurricaneResponseConstants {
   /**
   * Constructor.
   */
-  function HurricaneResponseController() {
-    registerContract(owner, "HR.Owner", false);
-    registerContract(address(this), "HR.Controller", false);
+  function HurricaneGuardController() {
+    registerContract(owner, "HG.Owner", false);
+    registerContract(address(this), "HG.Controller", false);
   }
 
   /**
@@ -45,7 +45,7 @@ contract HurricaneResponseController is Ownable, HurricaneResponseConstants {
   function transferOwnership(address _newOwner) onlyOwner {
     require(_newOwner != address(0));
     owner = _newOwner;
-    setContract(_newOwner, "HR.Owner", false);
+    setContract(_newOwner, "HG.Owner", false);
   }
 
   /**
@@ -101,21 +101,21 @@ contract HurricaneResponseController is Ownable, HurricaneResponseConstants {
   * We assume that contractIds.length is small, so this won't run out of gas.
   */
   function setAllContracts() onlyOwner {
-    HurricaneResponseControlledContract controlledContract;
+    HurricaneGuardControlledContract controlledContract;
     // TODO: Check for upper bound for i
     // i = 0 is FD.Owner, we skip this. // check!
     for (uint i = 0; i < contractIds.length; i++) {
       if (contracts[contractIds[i]].isControlled == true) {
-        controlledContract = HurricaneResponseControlledContract(contracts[contractIds[i]].addr);
+        controlledContract = HurricaneGuardControlledContract(contracts[contractIds[i]].addr);
         controlledContract.setContracts();
       }
     }
   }
 
   function setOneContract(uint i) onlyOwner {
-    HurricaneResponseControlledContract controlledContract;
+    HurricaneGuardControlledContract controlledContract;
     // TODO: Check for upper bound for i
-    controlledContract = HurricaneResponseControlledContract(contracts[contractIds[i]].addr);
+    controlledContract = HurricaneGuardControlledContract(contracts[contractIds[i]].addr);
     controlledContract.setContracts();
   }
 
@@ -126,7 +126,7 @@ contract HurricaneResponseController is Ownable, HurricaneResponseConstants {
   function destructOne(bytes32 _id) onlyOwner {
     address addr = getContract(_id);
     if (addr != 0x0) {
-      HurricaneResponseControlledContract(addr).destruct();
+      HurricaneGuardControlledContract(addr).destruct();
     }
   }
 

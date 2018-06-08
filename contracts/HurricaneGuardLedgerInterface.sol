@@ -16,9 +16,9 @@
 pragma solidity ^0.4.11;
 
 
-import "./HurricaneResponseDatabaseModel.sol";
+import "./HurricaneGuardDatabaseModel.sol";
 
-contract HurricaneResponseLedgerInterface is HurricaneResponseDatabaseModel {
+contract HurricaneGuardLedgerInterface is HurricaneGuardDatabaseModel {
   function receiveFunds(Acc _to) payable;
 
   function sendFunds(address _recipient, Acc _from, uint _amount) returns (bool _success);

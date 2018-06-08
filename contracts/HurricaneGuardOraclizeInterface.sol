@@ -1,7 +1,7 @@
 /**
  * FlightDelay with Oraclized Underwriting and Payout
  *
- * @description	Underwrite contract interface
+ * @description	Ocaclize API interface
  * @copyright (c) 2017 etherisc GmbH
  * @author Christoph Mussenbrock, Stephan Karpischek
  *
@@ -16,6 +16,11 @@
 pragma solidity ^0.4.11;
 
 
-contract HurricaneResponseUnderwriteInterface {
-  function scheduleUnderwriteOraclizeCall(uint _policyId, bytes32 _carrierFlightNumber);
+import "./../vendors/usingOraclize.sol";
+
+contract HurricaneGuardOraclizeInterface is usingOraclize {
+  modifier onlyOraclizeOr (address _emergency) {
+    require(msg.sender == oraclize_cbAddress() || msg.sender == _emergency);
+    _;
+  }
 }

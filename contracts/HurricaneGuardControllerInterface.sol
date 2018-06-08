@@ -16,7 +16,7 @@
 pragma solidity ^0.4.11;
 
 
-contract HurricaneResponseControllerInterface {
+contract HurricaneGuardControllerInterface {
   function isOwner(address _addr) returns (bool _isOwner);
 
   function selfRegister(bytes32 _id) returns (bool result);

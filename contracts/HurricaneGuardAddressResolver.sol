@@ -7,12 +7,12 @@
 pragma solidity ^0.4.11;
 
 
-contract HurricaneResponseAddressResolver {
+contract HurricaneGuardAddressResolver {
   address public addr;
 
   address owner;
 
-  function HurricaneResponseAddressResolver() {
+  function HurricaneGuardAddressResolver() {
     owner = msg.sender;
   }
 

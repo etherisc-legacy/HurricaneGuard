@@ -1,5 +1,5 @@
 /**
- * Unit tests for HurricaneResponseNewPolicy
+ * Unit tests for HurricaneGuardNewPolicy
  *
  * @author Christoph Mussenbrock
  * @description t.b.d
@@ -21,7 +21,7 @@
 
 const EventEmitter = require('events')
 const Logformatter = require('./logformatter.js')
-const testSuite = require('./HurricaneResponseNewPolicy_Suite.js')
+const testSuite = require('./HurricaneGuardNewPolicy_Suite.js')
 // const log = require('../util/logger')
 
 const doTests = [
@@ -39,15 +39,15 @@ const doTests = [
 const logger = new Logformatter(web3)
 const EventsSeen = []
 
-const HurricaneResponseController = artifacts.require('HurricaneResponseController')
-const HurricaneResponseAccessController = artifacts.require('HurricaneResponseAccessController')
-const HurricaneResponseDatabase = artifacts.require('HurricaneResponseDatabase')
-const HurricaneResponseLedger = artifacts.require('HurricaneResponseLedger')
-const HurricaneResponseNewPolicy = artifacts.require('HurricaneResponseNewPolicy')
-const HurricaneResponseUnderwrite = artifacts.require('HurricaneResponseUnderwrite')
-const HurricaneResponsePayout = artifacts.require('HurricaneResponsePayout')
+const HurricaneGuardController = artifacts.require('HurricaneGuardController')
+const HurricaneGuardAccessController = artifacts.require('HurricaneGuardAccessController')
+const HurricaneGuardDatabase = artifacts.require('HurricaneGuardDatabase')
+const HurricaneGuardLedger = artifacts.require('HurricaneGuardLedger')
+const HurricaneGuardNewPolicy = artifacts.require('HurricaneGuardNewPolicy')
+const HurricaneGuardUnderwrite = artifacts.require('HurricaneGuardUnderwrite')
+const HurricaneGuardPayout = artifacts.require('HurricaneGuardPayout')
 
-contract('HurricaneResponseNewPolicy', (accounts) => {
+contract('HurricaneGuardNewPolicy', (accounts) => {
   const EE = new EventEmitter()
   let timeout
 
@@ -124,36 +124,36 @@ contract('HurricaneResponseNewPolicy', (accounts) => {
       logger.logLine('Testing', args.shouldDoSomething, 'info')
       EventsSeen.length = 0
 
-      return HurricaneResponseController.deployed()
+      return HurricaneGuardController.deployed()
         .then((instance) => {
           instances.CT = instance
           logWatcher(instance)
-          return HurricaneResponseAccessController.deployed()
+          return HurricaneGuardAccessController.deployed()
         })
         .then((instance) => {
           instances.AC = instance
           logWatcher(instance)
-          return HurricaneResponseDatabase.deployed()
+          return HurricaneGuardDatabase.deployed()
         })
         .then((instance) => {
           instances.DB = instance
           logWatcher(instance)
-          return HurricaneResponseLedger.deployed()
+          return HurricaneGuardLedger.deployed()
         })
         .then((instance) => {
           instances.LG = instance
           logWatcher(instance)
-          return HurricaneResponseNewPolicy.deployed()
+          return HurricaneGuardNewPolicy.deployed()
         })
         .then((instance) => {
           instances.NP = instance
           logWatcher(instance)
-          return HurricaneResponseUnderwrite.deployed()
+          return HurricaneGuardUnderwrite.deployed()
         })
         .then((instance) => {
           instances.UW = instance
           logWatcher(instance)
-          return HurricaneResponsePayout.deployed()
+          return HurricaneGuardPayout.deployed()
         })
         .then((instance) => {
           instances.PY = instance
@@ -219,7 +219,7 @@ contract('HurricaneResponseNewPolicy', (accounts) => {
 
   after(async () => {
     if (web3.version.network < 1000) {
-      const CT = await HurricaneResponseController.deployed()
+      const CT = await HurricaneGuardController.deployed()
       await CT.destructAll({ from: accounts[1], gas: 4700000 })
     }
   })
