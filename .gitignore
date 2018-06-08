@@ -4,3 +4,4 @@
 ContractLogs.log
 .env
 bridge.log
+.node-xmlhttprequest*
