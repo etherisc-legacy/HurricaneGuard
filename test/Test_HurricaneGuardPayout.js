@@ -5,7 +5,7 @@
  * @description t.b.d
  * @copyright (c) 2017 etherisc GmbH
  *
- * Hurricane Response
+ * HurricaneGuard
  * Modified work
  *
  * @copyright (c) 2018 Joel Martínez

@@ -5,7 +5,7 @@
  * @copyright (c) 2017 etherisc GmbH
  * @author Christoph Mussenbrock
  *
- * Hurricane Response
+ * HurricaneGuard
  * Modified work
  *
  * @copyright (c) 2018 Joel Martínez

@@ -5,7 +5,7 @@
  * @description Deploy FlightDelayController
  * @copyright (c) 2017 etherisc GmbH
  *
- * Hurricane Response with Underwriting and Payout
+ * HurricaneGuard with Underwriting and Payout
  * Modified work
  *
  * @copyright (c) 2018 Joel Martínez

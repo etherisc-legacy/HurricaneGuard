@@ -5,7 +5,7 @@
  * @copyright (c) 2017 etherisc GmbH
  * @author Christoph Mussenbrock, Stephan Karpischek
  *
- * Hurricane Response with Underwriting and Payout
+ * HurricaneGuard with Underwriting and Payout
  * Modified work
  *
  * @copyright (c) 2018 Joel Martínez
