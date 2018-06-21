@@ -12,26 +12,26 @@ contract Test_HurricaneGuardLedger {
   HurricaneGuardLedger HG_LG;
   HurricaneGuardAccessController HG_AC;
 
-  function test_init () {
+  function test_init() public {
     HG_CT = HurricaneGuardController(DeployedAddresses.HurricaneGuardController());
     HG_LG = HurricaneGuardLedger(DeployedAddresses.HurricaneGuardLedger());
     HG_AC = HurricaneGuardAccessController(DeployedAddresses.HurricaneGuardAccessController());
   }
 
-  function test_controller_should_be_set() {
+  function test_controller_should_be_set() public {
     address controller = HG_LG.controller();
     address SystemController = DeployedAddresses.HurricaneGuardController();
 
     Assert.equal(controller, SystemController, "Controller should be set properly");
   }
 
-  function test_access_permissions() {
+  function test_access_permissions() public {
     bool permissions = HG_AC.checkPermission(104, address(this));
 
     Assert.equal(permissions, false, "This contracts should not have 104 permissions");
   }
 
-  function test_set_permissions() {
+  function test_set_permissions() public {
     HG_AC.setPermissionById(199, "HG.Controller");
 
     bool permissions = HG_AC.checkPermission(199, DeployedAddresses.HurricaneGuardController());

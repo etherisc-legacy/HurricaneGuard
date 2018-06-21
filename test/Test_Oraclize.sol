@@ -12,12 +12,13 @@
  * @author Joel Martínez
  */
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 import "../contracts/HurricaneGuardOraclizeInterface.sol";
+
 
 contract Test_Oraclize is HurricaneGuardOraclizeInterface {
 	bytes32 queryId;
@@ -25,21 +26,21 @@ contract Test_Oraclize is HurricaneGuardOraclizeInterface {
   event LogBytes(string _message, bytes hexBytes);
   event LogString(string _message, string _string);
 
-	function Test_Oraclize () payable {}
+	function Test_Oraclize () public payable {}
 
-	function test_call_it() {
+	function test_call_it() public {
 		queryId = oraclize_query(
 			"URL",
 			"json(https://api.weather.gov/stations/TJSJ/observations?limit=1).features[0].properties.windSpeed.value"
 		);
 
-		LogBytes32('queryId', queryId);
+		emit LogBytes32('queryId', queryId);
     Assert.equal(true, queryId != "", "query id should not be empty");
 	}
 
-	function __callback(bytes32 _queryId, string _result, bytes _proof) {
-		LogBytes32('queryId', _queryId);
-		LogString('_result', _result);
-		LogBytes('_proof', _proof);
+	function __callback(bytes32 _queryId, string _result, bytes _proof) public {
+		emit LogBytes32('queryId', _queryId);
+		emit LogString('_result', _result);
+		emit LogBytes('_proof', _proof);
 	} // __callback
 }

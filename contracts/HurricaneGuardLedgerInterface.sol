@@ -13,15 +13,16 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 import "./HurricaneGuardDatabaseModel.sol";
 
+
 contract HurricaneGuardLedgerInterface is HurricaneGuardDatabaseModel {
-  function receiveFunds(Acc _to) payable;
+  function receiveFunds(Acc _to) public payable;
 
-  function sendFunds(address _recipient, Acc _from, uint _amount) returns (bool _success);
+  function sendFunds(address _recipient, Acc _from, uint _amount) public returns (bool _success);
 
-  function bookkeeping(Acc _from, Acc _to, uint amount);
+  function bookkeeping(Acc _from, Acc _to, uint amount) public;
 }

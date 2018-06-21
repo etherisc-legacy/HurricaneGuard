@@ -13,34 +13,35 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 import "./HurricaneGuardControlledContract.sol";
 import "./HurricaneGuardDatabaseInterface.sol";
 import "./HurricaneGuardConstants.sol";
 
+
 contract HurricaneGuardAccessController is HurricaneGuardControlledContract, HurricaneGuardConstants {
-  HurricaneGuardDatabaseInterface HG_DB;
+  HurricaneGuardDatabaseInterface internal HG_DB;
 
   modifier onlyEmergency() {
-    require(msg.sender == HG_CI.getContract('HG.Emergency'));
+    require(msg.sender == HG_CI.getContract("HG.Emergency"));
     _;
   }
 
-  function HurricaneGuardAccessController(address _controller) {
+  function HurricaneGuardAccessController(address _controller) public {
     setController(_controller);
   }
 
-  function setContracts() onlyController {
+  function setContracts() public onlyController {
     HG_DB = HurricaneGuardDatabaseInterface(getContract("HG.Database"));
   }
 
-  function setPermissionById(uint8 _perm, bytes32 _id) {
+  function setPermissionById(uint8 _perm, bytes32 _id) public {
     HG_DB.setAccessControl(msg.sender, HG_CI.getContract(_id), _perm);
   }
 
-  function fixPermission(address _target, address _accessor, uint8 _perm, bool _access) onlyEmergency {
+  function fixPermission(address _target, address _accessor, uint8 _perm, bool _access) public onlyEmergency {
     HG_DB.setAccessControl(
       _target,
       _accessor,
@@ -49,7 +50,7 @@ contract HurricaneGuardAccessController is HurricaneGuardControlledContract, Hur
     );
   }
 
-  function setPermissionById(uint8 _perm, bytes32 _id, bool _access) {
+  function setPermissionById(uint8 _perm, bytes32 _id, bool _access) public {
     HG_DB.setAccessControl(
       msg.sender,
       HG_CI.getContract(_id),
@@ -58,11 +59,11 @@ contract HurricaneGuardAccessController is HurricaneGuardControlledContract, Hur
     );
   }
 
-  function setPermissionByAddress(uint8 _perm, address _addr) {
+  function setPermissionByAddress(uint8 _perm, address _addr) public {
     HG_DB.setAccessControl(msg.sender, _addr, _perm);
   }
 
-  function setPermissionByAddress(uint8 _perm, address _addr, bool _access) {
+  function setPermissionByAddress(uint8 _perm, address _addr, bool _access) public {
     HG_DB.setAccessControl(
       msg.sender,
       _addr,
@@ -71,7 +72,7 @@ contract HurricaneGuardAccessController is HurricaneGuardControlledContract, Hur
     );
   }
 
-  function checkPermission(uint8 _perm, address _addr) returns (bool _success) {
+  function checkPermission(uint8 _perm, address _addr) public returns (bool _success) {
     _success = HG_DB.getAccessControl(msg.sender, _addr, _perm);
   }
 }

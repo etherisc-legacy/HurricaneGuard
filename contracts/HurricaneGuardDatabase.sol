@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 import "./HurricaneGuardControlledContract.sol";
@@ -21,6 +21,8 @@ import "./HurricaneGuardDatabaseInterface.sol";
 import "./HurricaneGuardAccessControllerInterface.sol";
 import "./HurricaneGuardConstants.sol";
 
+
+// solhint-disable-next-line max-line-length
 contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGuardDatabaseInterface, HurricaneGuardConstants {
   // Table of policies
   Policy[] public policies;
@@ -44,13 +46,13 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
   // Lookup accounts of internal ledger
   int[6] public ledger;
 
-  HurricaneGuardAccessControllerInterface HG_AC;
+  HurricaneGuardAccessControllerInterface internal HG_AC;
 
-  function HurricaneGuardDatabase (address _controller) {
+  function HurricaneGuardDatabase (address _controller) public {
     setController(_controller);
   }
 
-  function setContracts() onlyController {
+  function setContracts() public onlyController {
     HG_AC = HurricaneGuardAccessControllerInterface(getContract("HG.AccessController"));
 
     HG_AC.setPermissionById(101, "HG.NewPolicy");
@@ -66,13 +68,13 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
     address _caller,
     uint8 _perm,
     bool _access
-  ) {
+  ) public {
     // one and only hardcoded accessControl
     require(msg.sender == HG_CI.getContract("HG.AccessController"));
     accessControl[_contract][_caller][_perm] = _access;
   }
 
-  function setAccessControl(address _contract, address _caller, uint8 _perm) {
+  function setAccessControl(address _contract, address _caller, uint8 _perm) public {
     setAccessControl(
       _contract,
       _caller,
@@ -81,12 +83,12 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
     );
   }
 
-  function getAccessControl(address _contract, address _caller, uint8 _perm) returns (bool _allowed) {
+  function getAccessControl(address _contract, address _caller, uint8 _perm) public returns (bool _allowed) {
     _allowed = accessControl[_contract][_caller][_perm];
   }
 
   // Getter and Setter for ledger
-  function setLedger(uint8 _index, int _value) {
+  function setLedger(uint8 _index, int _value) public {
     require(HG_AC.checkPermission(101, msg.sender));
 
     int previous = ledger[_index];
@@ -100,18 +102,19 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
     }
   }
 
-  function getLedger(uint8 _index) returns (int _value) {
+  function getLedger(uint8 _index) public returns (int _value) {
     _value = ledger[_index];
   }
 
   // Getter and Setter for policies
-  function getCustomerPremium(uint _policyId) returns (address _customer, uint _premium) {
+  function getCustomerPremium(uint _policyId) public returns (address _customer, uint _premium) {
     Policy storage p = policies[_policyId];
     _customer = p.customer;
     _premium = p.premium;
   }
 
-  function getPolicyData(uint _policyId) returns (address _customer, uint _weight, uint _premium, bytes32 _latlng) {
+  // solhint-disable-next-line max-line-length
+  function getPolicyData(uint _policyId) public returns (address _customer, uint _weight, uint _premium, bytes32 _latlng) {
     Policy storage p = policies[_policyId];
     _customer = p.customer;
     _weight = p.weight;
@@ -119,17 +122,18 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
     _latlng = p.latlng;
   }
 
-  function getPolicyState(uint _policyId) returns (policyState _state) {
+  function getPolicyState(uint _policyId) public returns (PolicyState _state) {
     Policy storage p = policies[_policyId];
     _state = p.state;
   }
 
-  function getRiskId(uint _policyId) returns (bytes32 _riskId) {
+  function getRiskId(uint _policyId) public returns (bytes32 _riskId) {
     Policy storage p = policies[_policyId];
     _riskId = p.riskId;
   }
 
-  function createPolicy(address _customer, uint _premium, Currency _currency, bytes32 _customerExternalId, bytes32 _riskId, bytes32 _latlng) returns (uint _policyId) {
+  // solhint-disable-next-line max-line-length
+  function createPolicy(address _customer, uint _premium, Currency _currency, bytes32 _customerExternalId, bytes32 _riskId, bytes32 _latlng) public returns (uint _policyId) {
     require(HG_AC.checkPermission(101, msg.sender));
 
     _policyId = policies.length++;
@@ -149,13 +153,13 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
 
   function setState(
     uint _policyId,
-    policyState _state,
+    PolicyState _state,
     uint _stateTime,
     bytes32 _stateMessage
-  ) {
+  ) public {
     require(HG_AC.checkPermission(101, msg.sender));
 
-    LogSetState(
+    emit LogSetState(
       _policyId,
       uint8(_state),
       _stateTime,
@@ -169,7 +173,7 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
     p.stateMessage = _stateMessage;
   }
 
-  function setWeight(uint _policyId, uint _weight, bytes _proof) {
+  function setWeight(uint _policyId, uint _weight, bytes _proof) public {
     require(HG_AC.checkPermission(101, msg.sender));
 
     Policy storage p = policies[_policyId];
@@ -178,7 +182,7 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
     p.proof = _proof;
   }
 
-  function setPayouts(uint _policyId, uint _calculatedPayout, uint _actualPayout) {
+  function setPayouts(uint _policyId, uint _calculatedPayout, uint _actualPayout) public {
     require(HG_AC.checkPermission(101, msg.sender));
 
     Policy storage p = policies[_policyId];
@@ -187,7 +191,7 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
     p.actualPayout = _actualPayout;
   }
 
-  function setHurricaneCategory(uint _policyId, bytes32 _category) {
+  function setHurricaneCategory(uint _policyId, bytes32 _category) public {
     require(HG_AC.checkPermission(101, msg.sender));
 
     Risk storage r = risks[policies[_policyId].riskId];
@@ -196,19 +200,19 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
   }
 
   // Getter and Setter for risks
-  function getRiskParameters(bytes32 _riskId) returns (bytes32 _market, bytes32 _season) {
+  function getRiskParameters(bytes32 _riskId) public returns (bytes32 _market, bytes32 _season) {
     Risk storage r = risks[_riskId];
     _market = r.market;
     _season = r.season;
   }
 
-  function getPremiumFactors(bytes32 _riskId) returns (uint _cumulatedWeightedPremium, uint _premiumMultiplier) {
+  function getPremiumFactors(bytes32 _riskId) public returns (uint _cumulatedWeightedPremium, uint _premiumMultiplier) {
     Risk storage r = risks[_riskId];
     _cumulatedWeightedPremium = r.cumulatedWeightedPremium;
     _premiumMultiplier = r.premiumMultiplier;
   }
 
-  function createUpdateRisk(bytes32 _market, bytes32 _season) returns (bytes32 _riskId) {
+  function createUpdateRisk(bytes32 _market, bytes32 _season) public returns (bytes32 _riskId) {
     require(HG_AC.checkPermission(101, msg.sender));
 
     _riskId = keccak256(
@@ -224,7 +228,7 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
     }
   }
 
-  function setPremiumFactors(bytes32 _riskId, uint _cumulatedWeightedPremium, uint _premiumMultiplier) {
+  function setPremiumFactors(bytes32 _riskId, uint _cumulatedWeightedPremium, uint _premiumMultiplier) public {
     require(HG_AC.checkPermission(101, msg.sender));
 
     Risk storage r = risks[_riskId];
@@ -233,11 +237,11 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
   }
 
   // Getter and Setter for oraclizeCallbacks
-  function getOraclizeCallback(bytes32 _queryId) returns (uint _policyId) {
+  function getOraclizeCallback(bytes32 _queryId) public returns (uint _policyId) {
     _policyId = oraclizeCallbacks[_queryId].policyId;
   }
 
-  function getOraclizePolicyId(bytes32 _queryId) returns (uint _policyId) {
+  function getOraclizePolicyId(bytes32 _queryId) public returns (uint _policyId) {
     OraclizeCallback storage o = oraclizeCallbacks[_queryId];
     _policyId = o.policyId;
   }
@@ -245,8 +249,8 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
   function createOraclizeCallback(
     bytes32 _queryId,
     uint _policyId,
-    oraclizeState _oraclizeState
-  ) {
+    OraclizeState _oraclizeState
+  ) public {
     require(HG_AC.checkPermission(101, msg.sender));
 
     oraclizeCallbacks[_queryId] = OraclizeCallback(_policyId, _oraclizeState);

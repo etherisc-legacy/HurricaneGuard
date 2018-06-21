@@ -4,28 +4,28 @@
 */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 contract HurricaneGuardAddressResolver {
   address public addr;
 
-  address owner;
+  address public owner;
 
-  function HurricaneGuardAddressResolver() {
+  function HurricaneGuardAddressResolver() public {
     owner = msg.sender;
   }
 
-  function changeOwner(address _owner) {
+  function changeOwner(address _owner) public {
     require(msg.sender == owner);
     owner = _owner;
   }
 
-  function getAddress() constant returns (address _addr) {
+  function getAddress() public constant returns (address _addr) {
     return addr;
   }
 
-  function setAddress(address _addr) {
+  function setAddress(address _addr) public {
     require(msg.sender == owner);
     addr = _addr;
   }

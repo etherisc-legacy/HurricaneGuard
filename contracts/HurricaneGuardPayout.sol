@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 import "./HurricaneGuardControlledContract.sol";
@@ -26,28 +26,26 @@ import "./HurricaneGuardOraclizeInterface.sol";
 import "./convertLib.sol";
 import "./../vendors/strings.sol";
 
+
+// solhint-disable-next-line max-line-length
 contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuardConstants, HurricaneGuardOraclizeInterface, ConvertLib {
   using strings for *;
 
-  HurricaneGuardDatabaseInterface HG_DB;
-  HurricaneGuardLedgerInterface HG_LG;
-  HurricaneGuardAccessControllerInterface HG_AC;
+  HurricaneGuardDatabaseInterface internal HG_DB;
+  HurricaneGuardLedgerInterface internal HG_LG;
+  HurricaneGuardAccessControllerInterface internal HG_AC;
 
   /*
    * @dev Contract constructor sets its controller
    * @param _controller FD.Controller
    */
-  function HurricaneGuardPayout(address _controller) {
+  function HurricaneGuardPayout(address _controller) public {
     setController(_controller);
     /* For testnet and mainnet */
     /* oraclize_setProof(proofType_TLSNotary); */
     /* For development */
-    OAR = OraclizeAddrResolverI(0x80e9c30A9dae62BCCf777E741bF2E312d828b65f);
+    OAR = OraclizeAddrResolverI(0xa6EA251E638409159926894544808916A91C6605);
   }
-
-  /*
-   * Public methods
-   */
 
   /*
    * @dev Set access permissions for methods
@@ -70,7 +68,7 @@ contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuar
   /*
    * @dev Fund contract
    */
-  function fund() payable {
+  function fund() public payable {
     require(HG_AC.checkPermission(102, msg.sender));
 
     // todo: bookkeeping
@@ -86,14 +84,15 @@ contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuar
   function schedulePayoutOraclizeCall(uint _policyId, bytes32 _riskId, uint _oraclizeTime) public {
     // TODO: decide wether a policy holder could trigger their own payout function
     require(HG_AC.checkPermission(101, msg.sender));
+    bytes32 season;
+    bytes32 latlng;
 
-    var (, season) = HG_DB.getRiskParameters(_riskId);
+    (, season) = HG_DB.getRiskParameters(_riskId);
     // Require payout to be in current season
     // TODO: should set policy as expired
-
     /* require(season == strings.uintToBytes(getYear(block.timestamp))); */
 
-    var (, , , latlng) = HG_DB.getPolicyData(_policyId);
+    (, , , latlng) = HG_DB.getPolicyData(_policyId);
 
     string memory oraclizeUrl = strConcat(
       ORACLIZE_STATUS_BASE_URL, "latlng=", b32toString(latlng), ").result"
@@ -104,10 +103,10 @@ contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuar
     HG_DB.createOraclizeCallback(
       queryId,
       _policyId,
-      oraclizeState.ForPayout
+      OraclizeState.ForPayout
     );
 
-    LogOraclizeCall(_policyId, queryId, oraclizeUrl);
+    emit LogOraclizeCall(_policyId, queryId, oraclizeUrl);
   }
 
   /*
@@ -116,15 +115,18 @@ contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuar
    * @param _result
    * @param _proof
    */
-  function __callback(bytes32 _queryId, string _result, bytes _proof) public onlyOraclizeOr(getContract('HG.Emergency')) {
-    var (policyId) = HG_DB.getOraclizeCallback(_queryId);
-    LogOraclizeCallback(policyId, _queryId, _result, _proof);
+  // solhint-disable-next-line max-line-length
+  function __callback(bytes32 _queryId, string _result, bytes _proof) public onlyOraclizeOr(getContract("HG.Emergency")) {
+    uint policyId;
+
+    (policyId) = HG_DB.getOraclizeCallback(_queryId);
+    emit LogOraclizeCallback(policyId, _queryId, _result, _proof);
 
     // check if policy was declined after this callback was scheduled
-    var state = HG_DB.getPolicyState(policyId);
+    PolicyState state = HG_DB.getPolicyState(policyId);
     require(uint8(state) != 5);
 
-    bytes32 riskId = HG_DB.getRiskId(policyId);
+    /* bytes32 riskId = HG_DB.getRiskId(policyId); */
 
     if (bytes(_result).length == 0) {
       // empty Result
@@ -136,22 +138,18 @@ contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuar
     // where first part is event Category
     // and second part is distance from event
 
-    var s = _result.toSlice();
-    var delim = ";".toSlice();
+    strings.slice memory s = _result.toSlice();
+    strings.slice memory delim = ";".toSlice();
     var parts = new string[](s.count(delim) + 1);
-    for(uint i = 0; i < parts.length; i++) {
+    for (uint i = 0; i < parts.length; i++) {
       parts[i] = s.split(delim).toString();
     }
 
-    var category = stringToBytes32(parts[0]);
-    var distance = parseInt(parts[1]);
+    bytes32 category = stringToBytes32(parts[0]);
+    uint distance = parseInt(parts[1]);
 
     payOut(policyId, category, distance);
   }
-
-  /*
-   * Internal methods
-   */
 
   /*
    * @dev Payout
@@ -159,53 +157,53 @@ contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuar
    * @param _category the intensity of the event
    * @param _distance the distance from the latlng to the event
    */
-  function payOut(uint _policyId, bytes32 _category, uint _distance) internal {
+  // solhint-disable-next-line code-complexity
+  function payOut(uint _policyId, bytes32 _cat, uint _dist) internal {
     // TODO: only setPayoutEvent for the initial trigger
     // this could be a waste of gas
-    HG_DB.setHurricaneCategory(_policyId, _category);
+    HG_DB.setHurricaneCategory(_policyId, _cat);
 
     // Distance is more than 30 miles
-    if (_distance > 48281) {
+    if (_dist > 48281) {
       // is too far, therfore not covered
-      HG_DB.setState(
-        _policyId,
-        policyState.Expired,
-        now,
-        "Too far for payout"
-      );
+      HG_DB.setState(_policyId, PolicyState.Expired, now, "Too far for payout"); // solhint-disable-line
     } else {
-      var (customer, weight, premium, ) = HG_DB.getPolicyData(_policyId);
+      address customer;
+      uint weight;
+      uint premium;
+
+      (customer, weight, premium, ) = HG_DB.getPolicyData(_policyId);
 
       uint multiplier = 0;
       // 0 - 5 miles
-      if (_distance < 8048) {
-        if (_category == "cat3_lower") multiplier = 10;
-        if (_category == "cat4_lower") multiplier = 20;
-        if (_category == "cat5_lower") multiplier = 30;
+      if (_dist < 8048) {
+        if (_cat == "cat3_lower") multiplier = 10;
+        if (_cat == "cat4_lower") multiplier = 20;
+        if (_cat == "cat5_lower") multiplier = 30;
       }
       // 5 - 15 miles
-      if (8048 < _distance && _distance < 24141) {
+      if (8048 < _dist && _dist < 24141) {
         // cat3 pays 50% at this distance
-        if (_category == "cat3_lower") multiplier = 5;
-        if (_category == "cat4_lower") multiplier = 20;
-        if (_category == "cat5_lower") multiplier = 30;
+        if (_cat == "cat3_lower") multiplier = 5;
+        if (_cat == "cat4_lower") multiplier = 20;
+        if (_cat == "cat5_lower") multiplier = 30;
       }
       // 15 - 30 miles
-      if (24141 < _distance && _distance < 48280) {
+      if (24141 < _dist && _dist < 48280) {
         // cat3 pays 20% at this distance
-        if (_category == "cat3_lower") multiplier = 2;
+        if (_cat == "cat3_lower") multiplier = 2;
         // cat4 pays 50% at this distance
-        if (_category == "cat4_lower") multiplier = 10;
+        if (_cat == "cat4_lower") multiplier = 10;
         // cat5 pays 70% at this distance
-        if (_category == "cat5_lower") multiplier = 21;
+        if (_cat == "cat5_lower") multiplier = 21;
       }
 
       if (multiplier == 0) {
         // No payable event happened for this policy
         HG_DB.setState(
           _policyId,
-          policyState.Expired,
-          now,
+          PolicyState.Expired,
+          now, // solhint-disable-line
           "No covered event for payout"
         );
       } else {
@@ -221,8 +219,8 @@ contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuar
         if (!HG_LG.sendFunds(customer, Acc.Payout, payout)) {
           HG_DB.setState(
             _policyId,
-            policyState.SendFailed,
-            now,
+            PolicyState.SendFailed,
+            now, // solhint-disable-line
             "Payout, send failed!"
           );
 
@@ -230,8 +228,8 @@ contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuar
         } else {
           HG_DB.setState(
             _policyId,
-            policyState.PaidOut,
-            now,
+            PolicyState.PaidOut,
+            now, // solhint-disable-line
             "Payout successful!"
           );
         }

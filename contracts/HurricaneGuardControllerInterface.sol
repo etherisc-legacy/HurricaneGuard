@@ -13,13 +13,13 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 contract HurricaneGuardControllerInterface {
-  function isOwner(address _addr) returns (bool _isOwner);
+  function isOwner(address _addr) public returns (bool _isOwner);
 
-  function selfRegister(bytes32 _id) returns (bool result);
+  function selfRegister(bytes32 _id) public returns (bool result);
 
-  function getContract(bytes32 _id) returns (address _addr);
+  function getContract(bytes32 _id) public returns (address _addr);
 }

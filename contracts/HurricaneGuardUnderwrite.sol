@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 import "./HurricaneGuardControlledContract.sol";
@@ -27,23 +27,25 @@ import "./HurricaneGuardOraclizeInterface.sol";
 import "./convertLib.sol";
 import "./../vendors/strings.sol";
 
+
+// solhint-disable-next-line max-line-length
 contract HurricaneGuardUnderwrite is HurricaneGuardControlledContract, HurricaneGuardConstants, HurricaneGuardOraclizeInterface, ConvertLib {
   using strings for *;
 
-  HurricaneGuardDatabaseInterface HG_DB;
-  HurricaneGuardLedgerInterface HG_LG;
-  HurricaneGuardPayoutInterface HG_PY;
-  HurricaneGuardAccessControllerInterface HG_AC;
+  HurricaneGuardDatabaseInterface internal HG_DB;
+  HurricaneGuardLedgerInterface internal HG_LG;
+  HurricaneGuardPayoutInterface internal HG_PY;
+  HurricaneGuardAccessControllerInterface internal HG_AC;
 
-  function HurricaneGuardUnderwrite(address _controller) {
+  function HurricaneGuardUnderwrite(address _controller) public {
     setController(_controller);
     /* For testnet and mainnet */
     /* oraclize_setProof(proofType_TLSNotary); */
     /* For development */
-    OAR = OraclizeAddrResolverI(0x80e9c30A9dae62BCCf777E741bF2E312d828b65f);
+    OAR = OraclizeAddrResolverI(0xa6EA251E638409159926894544808916A91C6605);
   }
 
-  function setContracts() onlyController {
+  function setContracts() public onlyController {
     HG_AC = HurricaneGuardAccessControllerInterface(getContract("HG.AccessController"));
     HG_DB = HurricaneGuardDatabaseInterface(getContract("HG.Database"));
     HG_LG = HurricaneGuardLedgerInterface(getContract("HG.Ledger"));
@@ -56,14 +58,14 @@ contract HurricaneGuardUnderwrite is HurricaneGuardControlledContract, Hurricane
   /*
    * @dev Fund contract
    */
-  function fund() payable {
+  function fund() public payable {
     require(HG_AC.checkPermission(102, msg.sender));
 
     // todo: bookkeeping
     // todo: fire funding event
   }
 
-  function scheduleUnderwriteOraclizeCall(uint _policyId, bytes32 _latlng) {
+  function scheduleUnderwriteOraclizeCall(uint _policyId, bytes32 _latlng) public {
     require(HG_AC.checkPermission(101, msg.sender));
 
     string memory oraclizeUrl = strConcat(
@@ -76,15 +78,16 @@ contract HurricaneGuardUnderwrite is HurricaneGuardControlledContract, Hurricane
     HG_DB.createOraclizeCallback(
       queryId,
       _policyId,
-      oraclizeState.ForUnderwriting
+      OraclizeState.ForUnderwriting
     );
 
-    LogOraclizeCall(_policyId, queryId, oraclizeUrl);
+    emit LogOraclizeCall(_policyId, queryId, oraclizeUrl);
   }
 
-  function __callback(bytes32 _queryId, string _result, bytes _proof) onlyOraclizeOr(getContract('HG.Emergency')) {
-    var (policyId,) = HG_DB.getOraclizeCallback(_queryId);
-    LogOraclizeCallback(policyId, _queryId, _result, _proof);
+  // solhint-disable-next-line max-line-length
+  function __callback(bytes32 _queryId, string _result, bytes _proof) public onlyOraclizeOr(getContract("HG.Emergency")) {
+    uint policyId = HG_DB.getOraclizeCallback(_queryId);
+    emit LogOraclizeCallback(policyId, _queryId, _result, _proof);
 
     if (bytes(_result).length == 0) {
       decline(policyId, "Declined (empty result)", _proof);
@@ -101,63 +104,72 @@ contract HurricaneGuardUnderwrite is HurricaneGuardControlledContract, Hurricane
     }
   } // __callback
 
-  function externalDecline(uint _policyId, bytes32 _reason) external {
+  function externalDecline(uint _policyId, bytes32 _reason) public {
     require(msg.sender == HG_CI.getContract("HG.CustomersAdmin"));
 
-    LogPolicyDeclined(_policyId, _reason);
+    emit LogPolicyDeclined(_policyId, _reason);
 
     HG_DB.setState(
       _policyId,
-      policyState.Declined,
-      now,
+      PolicyState.Declined,
+      now, // solhint-disable-line
       _reason
     );
 
     HG_DB.setWeight(_policyId, 0, "");
 
-    var (customer, premium) = HG_DB.getCustomerPremium(_policyId);
+    address customer;
+    uint premium;
+
+    (customer, premium) = HG_DB.getCustomerPremium(_policyId);
 
     if (!HG_LG.sendFunds(customer, Acc.Premium, premium)) {
       HG_DB.setState(
         _policyId,
-        policyState.SendFailed,
-        now,
-        "decline: Send failed."
+        PolicyState.SendFailed,
+        now, // solhint-disable-line
+        "Decline: Send failed."
       );
     }
   }
 
   function decline(uint _policyId, bytes32 _reason, bytes _proof)	internal {
-    LogPolicyDeclined(_policyId, _reason);
+    emit LogPolicyDeclined(_policyId, _reason);
 
     HG_DB.setState(
       _policyId,
-      policyState.Declined,
-      now,
+      PolicyState.Declined,
+      now, // solhint-disable-line
       _reason
     );
 
     HG_DB.setWeight(_policyId, 0, _proof);
 
-    var (customer, premium) = HG_DB.getCustomerPremium(_policyId);
+    address customer;
+    uint premium;
+
+    (customer, premium) = HG_DB.getCustomerPremium(_policyId);
 
     // TODO: LOG
     if (!HG_LG.sendFunds(customer, Acc.Premium, premium)) {
       HG_DB.setState(
         _policyId,
-        policyState.SendFailed,
-        now,
-        "decline: Send failed."
+        PolicyState.SendFailed,
+        now, // solhint-disable-line
+        "Decline: Send failed."
       );
     }
   }
 
+  // solhint-disable-next-line no-unused-vars
   function underwrite(uint _policyId, uint[6] _statistics, bytes _proof) internal {
-    var (, premium) = HG_DB.getCustomerPremium(_policyId); // throws if _policyId invalid
+    uint premium;
+    uint premiumMultiplier;
+
+    (, premium) = HG_DB.getCustomerPremium(_policyId); // throws if _policyId invalid
     bytes32 riskId = HG_DB.getRiskId(_policyId);
 
-    var (, premiumMultiplier) = HG_DB.getPremiumFactors(riskId);
-    var (, , arrivalTime) = HG_DB.getRiskParameters(riskId);
+    (, premiumMultiplier) = HG_DB.getPremiumFactors(riskId);
 
     // we calculate the factors to limit cluster risks.
     if (premiumMultiplier == 0) {
@@ -167,12 +179,12 @@ contract HurricaneGuardUnderwrite is HurricaneGuardControlledContract, Hurricane
 
     HG_DB.setState(
       _policyId,
-      policyState.Accepted,
-      now,
+      PolicyState.Accepted,
+      now, // solhint-disable-line
       "Policy underwritten by oracle"
     );
 
-    LogPolicyAccepted(
+    emit LogPolicyAccepted(
       _policyId,
       _statistics[0],
       _statistics[1],

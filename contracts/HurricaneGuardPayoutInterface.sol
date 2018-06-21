@@ -13,9 +13,9 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 contract HurricaneGuardPayoutInterface {
-  function schedulePayoutOraclizeCall(uint _policyId, bytes32 _riskId, uint _offset);
+  function schedulePayoutOraclizeCall(uint _policyId, bytes32 _riskId, uint _offset) public;
 }

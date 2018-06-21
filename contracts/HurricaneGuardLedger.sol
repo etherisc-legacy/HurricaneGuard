@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 import "./HurricaneGuardControlledContract.sol";
@@ -22,15 +22,17 @@ import "./HurricaneGuardDatabaseInterface.sol";
 import "./HurricaneGuardLedgerInterface.sol";
 import "./HurricaneGuardConstants.sol";
 
-contract HurricaneGuardLedger is HurricaneGuardControlledContract, HurricaneGuardLedgerInterface, HurricaneGuardConstants {
-  HurricaneGuardDatabaseInterface HG_DB;
-  HurricaneGuardAccessControllerInterface HG_AC;
 
-  function HurricaneGuardLedger(address _controller) {
+// solhint-disable-next-line max-line-length
+contract HurricaneGuardLedger is HurricaneGuardControlledContract, HurricaneGuardLedgerInterface, HurricaneGuardConstants {
+  HurricaneGuardDatabaseInterface internal HG_DB;
+  HurricaneGuardAccessControllerInterface internal HG_AC;
+
+  function HurricaneGuardLedger(address _controller) public {
     setController(_controller);
   }
 
-  function setContracts() onlyController {
+  function setContracts() public onlyController {
     HG_AC = HurricaneGuardAccessControllerInterface(getContract("HG.AccessController"));
     HG_DB = HurricaneGuardDatabaseInterface(getContract("HG.Database"));
 
@@ -57,7 +59,7 @@ contract HurricaneGuardLedger is HurricaneGuardControlledContract, HurricaneGuar
   /*
    * @dev Fund contract
    */
-  function fund() payable {
+  function fund() public payable {
     require(HG_AC.checkPermission(104, msg.sender));
 
     bookkeeping(Acc.Balance, Acc.RiskFund, msg.value);
@@ -65,25 +67,27 @@ contract HurricaneGuardLedger is HurricaneGuardControlledContract, HurricaneGuar
     // todo: fire funding event
   }
 
-  function receiveFunds(Acc _to) payable {
+  function receiveFunds(Acc _to) public payable {
     require(HG_AC.checkPermission(101, msg.sender));
 
-    LogReceiveFunds(msg.sender, uint8(_to), msg.value);
+    emit LogReceiveFunds(msg.sender, uint8(_to), msg.value);
 
     bookkeeping(Acc.Balance, _to, msg.value);
   }
 
-  function sendFunds(address _recipient, Acc _from, uint _amount) returns (bool _success) {
+  function sendFunds(address _recipient, Acc _from, uint _amount) public returns (bool _success) {
     require(HG_AC.checkPermission(102, msg.sender));
 
-    if (this.balance < _amount) {
+    if (address(this).balance < _amount) {
       return false; // unsufficient funds
     }
 
-    LogSendFunds(_recipient, uint8(_from), _amount);
+    emit LogSendFunds(_recipient, uint8(_from), _amount);
 
     bookkeeping(_from, Acc.Balance, _amount); // cash out payout
 
+    // @TODO: refactor into pull payment?
+    // solhint-disable-next-line multiple-sends
     if (!_recipient.send(_amount)) {
       bookkeeping(Acc.Balance, _from, _amount);
       _success = false;
@@ -93,8 +97,7 @@ contract HurricaneGuardLedger is HurricaneGuardControlledContract, HurricaneGuar
   }
 
   // invariant: acc_Premium + acc_RiskFund + acc_Payout + acc_Balance + acc_Reward + acc_OraclizeCosts == 0
-
-  function bookkeeping(Acc _from, Acc _to, uint256 _amount) {
+  function bookkeeping(Acc _from, Acc _to, uint256 _amount) public {
     require(HG_AC.checkPermission(103, msg.sender));
 
     // check against type cast overflow

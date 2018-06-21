@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 contract HurricaneGuardDatabaseModel {
@@ -49,13 +49,11 @@ contract HurricaneGuardDatabaseModel {
   // 06 = SendFailed:	During Revoke, Decline or Payout, sending ether failed
   //					        for unknown reasons.
   //					        The funds remain in the contracts RiskFund.
-
-
   //                   00       01        02       03        04      05           06
-  enum policyState { Applied, Accepted, Revoked, PaidOut, Expired, Declined, SendFailed }
+  enum PolicyState { Applied, Accepted, Revoked, PaidOut, Expired, Declined, SendFailed }
 
   // oraclize callback types:
-  enum oraclizeState { ForUnderwriting, ForPayout }
+  enum OraclizeState { ForUnderwriting, ForPayout }
 
   //               00   01   02   03
   enum Currency { ETH, EUR, USD, GBP }
@@ -84,7 +82,7 @@ contract HurricaneGuardDatabaseModel {
 
     // status fields:
     // 6 - the state of the policy
-    policyState state;
+    PolicyState state;
     // 7 - time of last state change
     uint stateTime;
     // 8 - state change message/reason
@@ -124,7 +122,7 @@ contract HurricaneGuardDatabaseModel {
     // for which policy have we called?
     uint policyId;
     // for which purpose did we call? {ForUnderwrite | ForPayout}
-    oraclizeState oState;
+    OraclizeState oState;
   }
 
   struct Customer {

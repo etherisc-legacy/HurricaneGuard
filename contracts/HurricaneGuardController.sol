@@ -13,12 +13,13 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 import "./Ownable.sol";
 import "./HurricaneGuardControlledContract.sol";
 import "./HurricaneGuardConstants.sol";
+
 
 contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
   struct Controller {
@@ -33,7 +34,7 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
   /**
   * Constructor.
   */
-  function HurricaneGuardController() {
+  function HurricaneGuardController() public {
     registerContract(owner, "HG.Owner", false);
     registerContract(address(this), "HG.Controller", false);
   }
@@ -42,20 +43,10 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
    * @dev Allows the current owner to transfer control of the contract to a newOwner.
    * @param _newOwner The address to transfer ownership to.
    */
-  function transferOwnership(address _newOwner) onlyOwner {
+  function transferOwnership(address _newOwner) public onlyOwner {
     require(_newOwner != address(0));
     owner = _newOwner;
     setContract(_newOwner, "HG.Owner", false);
-  }
-
-  /**
-  * Store address of one contract in mapping.
-  * @param _addr       Address of contract
-  * @param _id         ID of contract
-  */
-  function setContract(address _addr, bytes32 _id, bool _isControlled) internal {
-    contracts[_id].addr = _addr;
-    contracts[_id].isControlled = _isControlled;
   }
 
   /**
@@ -64,7 +55,7 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
   * @param _id         ID of contract
   * @return The address of the contract.
   */
-  function getContract(bytes32 _id) returns (address _addr) {
+  function getContract(bytes32 _id) public returns (address _addr) {
     _addr = contracts[_id].addr;
   }
 
@@ -74,7 +65,7 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
   * @param _id         ID of contract
   * @return  bool        success
   */
-  function registerContract(address _addr, bytes32 _id, bool _isControlled) onlyOwner returns (bool _result) {
+  function registerContract(address _addr, bytes32 _id, bool _isControlled) public onlyOwner returns (bool _result) {
     setContract(_addr, _id, _isControlled);
     contractIds.push(_id);
     _result = true;
@@ -86,7 +77,7 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
   * @param _id         ID of contract
   * @return  bool        success
   */
-  function deregister(bytes32 _id) onlyOwner returns (bool _result) {
+  function deregister(bytes32 _id) public onlyOwner returns (bool _result) {
     if (getContract(_id) == 0x0) {
       return false;
     }
@@ -100,7 +91,7 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
   * This call pulls the addresses of the needed contracts in the respective contract.
   * We assume that contractIds.length is small, so this won't run out of gas.
   */
-  function setAllContracts() onlyOwner {
+  function setAllContracts() public onlyOwner {
     HurricaneGuardControlledContract controlledContract;
     // TODO: Check for upper bound for i
     // i = 0 is FD.Owner, we skip this. // check!
@@ -112,7 +103,7 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
     }
   }
 
-  function setOneContract(uint i) onlyOwner {
+  function setOneContract(uint i) public onlyOwner {
     HurricaneGuardControlledContract controlledContract;
     // TODO: Check for upper bound for i
     controlledContract = HurricaneGuardControlledContract(contracts[contractIds[i]].addr);
@@ -123,7 +114,7 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
   * Destruct one contract.
   * @param _id         ID of contract to destroy.
   */
-  function destructOne(bytes32 _id) onlyOwner {
+  function destructOne(bytes32 _id) public onlyOwner {
     address addr = getContract(_id);
     if (addr != 0x0) {
       HurricaneGuardControlledContract(addr).destruct();
@@ -135,7 +126,7 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
   * We assume that contractIds.length is small, so this won't run out of gas.
   * Otherwise, you can still destroy one contract after the other with destructOne.
   */
-  function destructAll() onlyOwner {
+  function destructAll() public onlyOwner {
     // TODO: Check for upper bound for i
     for (uint i = 0; i < contractIds.length; i++) {
       if (contracts[contractIds[i]].isControlled == true) {
@@ -144,5 +135,15 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
     }
 
     selfdestruct(owner);
+  }
+
+  /**
+  * Store address of one contract in mapping.
+  * @param _addr       Address of contract
+  * @param _id         ID of contract
+  */
+  function setContract(address _addr, bytes32 _id, bool _isControlled) internal {
+    contracts[_id].addr = _addr;
+    contracts[_id].isControlled = _isControlled;
   }
 }

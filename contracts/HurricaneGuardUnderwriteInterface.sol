@@ -13,9 +13,9 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 contract HurricaneGuardUnderwriteInterface {
-  function scheduleUnderwriteOraclizeCall(uint _policyId, bytes32 _carrierFlightNumber);
+  function scheduleUnderwriteOraclizeCall(uint _policyId, bytes32 _latlng) public;
 }

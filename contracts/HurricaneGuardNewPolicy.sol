@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 import "./HurricaneGuardControlledContract.sol";
@@ -25,17 +25,18 @@ import "./HurricaneGuardUnderwriteInterface.sol";
 import "./convertLib.sol";
 import "./../vendors/strings.sol";
 
-contract HurricaneGuardNewPolicy is HurricaneGuardControlledContract, HurricaneGuardConstants, ConvertLib {
-  HurricaneGuardAccessControllerInterface HG_AC;
-  HurricaneGuardDatabaseInterface HG_DB;
-  HurricaneGuardLedgerInterface HG_LG;
-  HurricaneGuardUnderwriteInterface HG_UW;
 
-  function HurricaneGuardNewPolicy(address _controller) {
+contract HurricaneGuardNewPolicy is HurricaneGuardControlledContract, HurricaneGuardConstants, ConvertLib {
+  HurricaneGuardAccessControllerInterface internal HG_AC;
+  HurricaneGuardDatabaseInterface internal HG_DB;
+  HurricaneGuardLedgerInterface internal HG_LG;
+  HurricaneGuardUnderwriteInterface internal HG_UW;
+
+  function HurricaneGuardNewPolicy(address _controller) public {
     setController(_controller);
   }
 
-  function setContracts() onlyController {
+  function setContracts() public onlyController {
     HG_AC = HurricaneGuardAccessControllerInterface(getContract("HG.AccessController"));
     HG_DB = HurricaneGuardDatabaseInterface(getContract("HG.Database"));
     HG_LG = HurricaneGuardLedgerInterface(getContract("HG.Ledger"));
@@ -46,20 +47,7 @@ contract HurricaneGuardNewPolicy is HurricaneGuardControlledContract, HurricaneG
     HG_AC.setPermissionById(103, "HG.Owner");
   }
 
-  function bookAndCalcRemainingPremium() internal returns (uint) {
-    uint v = msg.value;
-    uint reserve = v * RESERVE_PERCENT / 100;
-    uint remain = v - reserve;
-    uint reward = remain * REWARD_PERCENT / 100;
-
-    // HG_LG.bookkeeping(Acc.Balance, Acc.Premium, v);
-    HG_LG.bookkeeping(Acc.Premium, Acc.RiskFund, reserve);
-    HG_LG.bookkeeping(Acc.Premium, Acc.Reward, reward);
-
-    return (uint(remain - reward));
-  }
-
-  function maintenanceMode(bool _on) {
+  function maintenanceMode(bool _on) public {
     if (HG_AC.checkPermission(103, msg.sender)) {
       HG_AC.setPermissionByAddress(101, 0x0, !_on);
     }
@@ -79,7 +67,7 @@ contract HurricaneGuardNewPolicy is HurricaneGuardControlledContract, HurricaneG
     bytes32 _season,
     bytes32 _latlng,
     Currency _currency,
-    bytes32 _customerExternalId) payable
+    bytes32 _customerExternalId) public payable
   {
     // here we can switch it off.
     require(HG_AC.checkPermission(101, 0x0));
@@ -88,17 +76,16 @@ contract HurricaneGuardNewPolicy is HurricaneGuardControlledContract, HurricaneG
     if (_currency == Currency.ETH) {
       // ETH
       if (msg.value < MIN_PREMIUM || msg.value > MAX_PREMIUM) {
-        LogPolicyDeclined(0, "Invalid premium value ETH");
+        emit LogPolicyDeclined(0, "Invalid premium value ETH");
         HG_LG.sendFunds(msg.sender, Acc.Premium, msg.value);
         return;
       }
     } else {
       require(msg.sender == getContract("HG.CustomersAdmin"));
-
       if (_currency == Currency.USD) {
         // USD
         if (msg.value < MIN_PREMIUM_USD || msg.value > MAX_PREMIUM_USD) {
-          LogPolicyDeclined(0, "Invalid premium value USD");
+          emit LogPolicyDeclined(0, "Invalid premium value USD");
           HG_LG.sendFunds(msg.sender, Acc.Premium, msg.value);
           return;
         }
@@ -113,39 +100,35 @@ contract HurricaneGuardNewPolicy is HurricaneGuardControlledContract, HurricaneG
     //  - and a safe way to create them
     // 2- _season is not current year
     // 3- TODO: the amount of policies for the pilot are filled
-
-    if (_season != strings.uintToBytes(getYear(block.timestamp))) {
-      LogPolicyDeclined(0, "Invalid market/season");
+    if (_season != strings.uintToBytes(getYear(block.timestamp))) { // solhint-disable-line
+      emit LogPolicyDeclined(0, "Invalid market/season");
       HG_LG.sendFunds(msg.sender, Acc.Premium, msg.value);
       return;
     }
 
     bytes32 riskId = HG_DB.createUpdateRisk(_market, _season);
-
     uint premium = bookAndCalcRemainingPremium();
     uint policyId = HG_DB.createPolicy(msg.sender, premium, _currency, _customerExternalId, riskId, _latlng);
 
     // now we have successfully applied
-    HG_DB.setState(
-      policyId,
-      policyState.Applied,
-      now,
-      "Policy applied by customer"
-    );
+    HG_DB.setState(policyId, PolicyState.Applied, now, "Policy applied by customer"); // solhint-disable-line
 
-    LogPolicyApplied(
-      policyId,
-      msg.sender,
-      _market,
-      premium
-    );
-
-    LogExternal(
-      policyId,
-      msg.sender,
-      _customerExternalId
-    );
+    emit LogPolicyApplied(policyId, msg.sender, _market, premium);
+    emit LogExternal(policyId, msg.sender, _customerExternalId);
 
     HG_UW.scheduleUnderwriteOraclizeCall(policyId, _latlng);
+  }
+
+  function bookAndCalcRemainingPremium() internal returns (uint) {
+    uint v = msg.value;
+    uint reserve = v * RESERVE_PERCENT / 100;
+    uint remain = v - reserve;
+    uint reward = remain * REWARD_PERCENT / 100;
+
+    // HG_LG.bookkeeping(Acc.Balance, Acc.Premium, v);
+    HG_LG.bookkeeping(Acc.Premium, Acc.RiskFund, reserve);
+    HG_LG.bookkeeping(Acc.Premium, Acc.Reward, reward);
+
+    return (uint(remain - reward));
   }
 }

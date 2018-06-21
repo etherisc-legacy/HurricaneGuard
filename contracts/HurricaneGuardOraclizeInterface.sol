@@ -13,10 +13,11 @@
  */
 
 
-pragma solidity ^0.4.11;
+pragma solidity 0.4.21;
 
 
 import "./../vendors/usingOraclize.sol";
+
 
 contract HurricaneGuardOraclizeInterface is usingOraclize {
   modifier onlyOraclizeOr (address _emergency) {
