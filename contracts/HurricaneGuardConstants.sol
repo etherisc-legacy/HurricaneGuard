@@ -141,10 +141,10 @@ contract HurricaneGuardConstants {
   // This api is a placeholder until we can integrate
   // an accurate risk pricing service
   string internal constant ORACLIZE_RATINGS_BASE_URL =
-    "json(http://ec2-35-173-178-191.compute-1.amazonaws.com/api/oracle/ratings/?";
+    "json(https://staging.hurricaneguard.io/api/oracle/ratings/?";
 
   string internal constant ORACLIZE_STATUS_BASE_URL =
-    "json(http://ec2-35-173-178-191.compute-1.amazonaws.com/api/oracle/status/?";
+    "json(https://staging.hurricaneguard.io/api/oracle/status/?";
 
   // gas Constants for oraclize
   uint internal constant ORACLIZE_GAS = 3500000;
