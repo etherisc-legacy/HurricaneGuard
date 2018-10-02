@@ -17,7 +17,8 @@ Features
 Development
 -----------
 
-* Uses [Oraclize Ethereum Bridge](https://github.com/oraclize/ethereum-bridge)
+* Run [Ganache](https://truffleframework.com/ganache)
+* Use [Oraclize Ethereum Bridge](https://github.com/oraclize/ethereum-bridge)
 for testing contracts with Oraclize integration `ethereum-bridge -H localhost:7545 --dev -a 9`
 * Update [HurricaneGuardUnderwrite.sol#L43](https://github.com/etherisc/HurricaneGuard/blob/master/contracts/HurricaneGuardUnderwrite.sol#L43)
 and [HurricaneGuardPayout.sol#L45](https://github.com/etherisc/HurricaneGuard/blob/master/contracts/HurricaneGuardPayout.sol#L45)
