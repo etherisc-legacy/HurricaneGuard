@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 
 import "./HurricaneGuardControlledContract.sol";
@@ -29,7 +29,7 @@ contract HurricaneGuardAccessController is HurricaneGuardControlledContract, Hur
     _;
   }
 
-  function HurricaneGuardAccessController(address _controller) public {
+  constructor(address _controller) public {
     setController(_controller);
   }
 

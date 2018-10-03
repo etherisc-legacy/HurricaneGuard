@@ -21,7 +21,8 @@
     "request-promise": "^4.2.2",
     "solhint": "^1.2.1",
     "standard": "^11.0.1",
-    "truffle-hdwallet-provider": "github:trufflesuite/truffle-hdwallet-provider",
+    "truffle": "^4.1.14",
+    "truffle-hdwallet-provider": "0.0.6",
     "winston": "^2.4.2"
   },
   "dependencies": {}

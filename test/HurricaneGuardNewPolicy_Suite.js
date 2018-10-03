@@ -59,7 +59,7 @@ const testSuite = [
   {
     testId: '#01',
     shouldDoSomething: 'should process with ETH #01 - No covered hurricane event (no payout)',
-    data: standardPolicy('44.6,10.43', 'PR', '2018', 'A000001', 0 /* ETH */),
+    data: standardPolicy('84.6,60.43', 'PR', '2018', 'A000001', 0 /* ETH */),
     timeoutHandler: standardTimeoutHandler,
     timeoutValue: 80000,
     logHandlerUnderwrite: standardLogHandler([
@@ -85,7 +85,7 @@ const testSuite = [
   }, {
     testId: '#02',
     shouldDoSomething: 'should process with USD #02 - No covered hurricane event (no payout)',
-    data: standardPolicy('44.6,10.43', 'PR', '2018', 'A000002', 2 /* USD */),
+    data: standardPolicy('84.6,60.43', 'PR', '2018', 'A000002', 2 /* USD */),
     timeoutHandler: standardTimeoutHandler,
     timeoutValue: 80000,
     logHandlerUnderwrite: standardLogHandler([

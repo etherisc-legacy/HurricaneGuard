@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 
 import "./HurricaneGuardControlledContract.sol";
@@ -48,7 +48,7 @@ contract HurricaneGuardDatabase is HurricaneGuardControlledContract, HurricaneGu
 
   HurricaneGuardAccessControllerInterface internal HG_AC;
 
-  function HurricaneGuardDatabase (address _controller) public {
+  constructor(address _controller) public {
     setController(_controller);
   }
 

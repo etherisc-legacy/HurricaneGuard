@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 
 import "./HurricaneGuardControlledContract.sol";
@@ -32,7 +32,7 @@ contract HurricaneGuardNewPolicy is HurricaneGuardControlledContract, HurricaneG
   HurricaneGuardLedgerInterface internal HG_LG;
   HurricaneGuardUnderwriteInterface internal HG_UW;
 
-  function HurricaneGuardNewPolicy(address _controller) public {
+  constructor(address _controller) public {
     setController(_controller);
   }
 

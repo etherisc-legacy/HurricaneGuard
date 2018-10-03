@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 
 import "./HurricaneGuardControlledContract.sol";
@@ -39,12 +39,12 @@ contract HurricaneGuardPayout is HurricaneGuardControlledContract, HurricaneGuar
    * @dev Contract constructor sets its controller
    * @param _controller FD.Controller
    */
-  function HurricaneGuardPayout(address _controller) public {
+  constructor(address _controller) public {
     setController(_controller);
     /* For testnet and mainnet */
     /* oraclize_setProof(proofType_TLSNotary); */
     /* For development */
-    OAR = OraclizeAddrResolverI(0xa6EA251E638409159926894544808916A91C6605);
+    OAR = OraclizeAddrResolverI(0x80e9c30A9dae62BCCf777E741bF2E312d828b65f);
   }
 
   /*

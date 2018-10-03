@@ -4,7 +4,7 @@
 */
 
 
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 
 contract HurricaneGuardAddressResolver {
@@ -12,7 +12,7 @@ contract HurricaneGuardAddressResolver {
 
   address public owner;
 
-  function HurricaneGuardAddressResolver() public {
+  constructor() public {
     owner = msg.sender;
   }
 

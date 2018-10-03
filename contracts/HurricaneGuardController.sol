@@ -13,7 +13,7 @@
  */
 
 
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 
 import "./Ownable.sol";
@@ -34,7 +34,7 @@ contract HurricaneGuardController is Ownable, HurricaneGuardConstants {
   /**
   * Constructor.
   */
-  function HurricaneGuardController() public {
+  constructor() public {
     registerContract(owner, "HG.Owner", false);
     registerContract(address(this), "HG.Controller", false);
   }
